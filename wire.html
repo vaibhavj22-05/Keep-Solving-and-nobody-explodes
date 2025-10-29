@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Realistic Wire Bomb</title>
+<title>Wire Defusal Module</title>
 <style>
   body {
     background-color: #111;
@@ -96,15 +96,14 @@
   .wire-shadow {
     filter: drop-shadow(0 0 2px #000);
   }
-
 </style>
 </head>
 <body>
   <div class="bomb">
-    <div class="timer">00:45</div>
-    <button class="stop-btn">STOP</button>
+    <div class="timer" id="timer">00:45</div>
+    <button class="stop-btn" id="stopBtn">STOP</button>
 
-    <!-- Nodes (connection points) -->
+    <!-- Connection Nodes -->
     <div class="node left" style="top: 70px;"></div>
     <div class="node right" style="top: 70px;"></div>
 
@@ -121,59 +120,84 @@
       <path id="greenWire" class="wire-shadow" d="M 20 220 C 150 180, 300 260, 500 220" stroke="lime" stroke-width="6" fill="none" stroke-linecap="round"/>
     </svg>
   </div>
-  <script src="script.js"></script>
 
-  <script>
-    const wires = [
-      { id: 'redWire', y: 80, color: 'red' },
-      { id: 'blueWire', y: 150, color: 'blue' },
-      { id: 'greenWire', y: 220, color: 'lime' }
-    ];
+<script>
+  const wires = [
+    { id: 'redWire', y: 80, color: 'red' },
+    { id: 'blueWire', y: 150, color: 'blue' },
+    { id: 'greenWire', y: 220, color: 'lime' }
+  ];
 
-    wires.forEach(wire => {
-      const path = document.getElementById(wire.id);
-      path.addEventListener('click', () => cutWire(wire));
-    });
+  // Randomly select correct wire for this module (expert knows via manual)
+  const correctWire = wires[Math.floor(Math.random() * wires.length)].id;
+  let gameOver = false;
 
-    function cutWire(wire) {
-      const path = document.getElementById(wire.id);
-      if (path.dataset.cut === "true") return;
-      path.dataset.cut = "true";
+  wires.forEach(wire => {
+    const path = document.getElementById(wire.id);
+    path.addEventListener('click', () => cutWire(wire));
+  });
 
-      const svg = path.parentNode;
-      path.remove();
+  function cutWire(wire) {
+    if (gameOver) return;
+    const path = document.getElementById(wire.id);
+    if (!path || path.dataset.cut === "true") return;
+    path.dataset.cut = "true";
+    path.remove();
 
-      const leftPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      leftPath.setAttribute("d", `M 20 ${wire.y} C 150 ${wire.y - 40}, 200 ${wire.y + 10}, 250 ${wire.y - 20}`);
-      leftPath.setAttribute("stroke", wire.color);
-      leftPath.setAttribute("stroke-width", 6);
-      leftPath.setAttribute("fill", "none");
-      leftPath.setAttribute("stroke-linecap", "round");
-      leftPath.classList.add("wire-shadow");
+    // Split animation
+    const svg = document.getElementById("wires");
+    const leftPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    leftPath.setAttribute("d", `M 20 ${wire.y} C 150 ${wire.y - 40}, 200 ${wire.y + 10}, 250 ${wire.y - 20}`);
+    leftPath.setAttribute("stroke", wire.color);
+    leftPath.setAttribute("stroke-width", 6);
+    leftPath.setAttribute("fill", "none");
+    leftPath.setAttribute("stroke-linecap", "round");
+    leftPath.classList.add("wire-shadow");
 
-      const rightPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-      rightPath.setAttribute("d", `M 270 ${wire.y + 10} C 320 ${wire.y + 40}, 400 ${wire.y - 20}, 500 ${wire.y}`);
-      rightPath.setAttribute("stroke", wire.color);
-      rightPath.setAttribute("stroke-width", 6);
-      rightPath.setAttribute("fill", "none");
-      rightPath.setAttribute("stroke-linecap", "round");
-      rightPath.classList.add("wire-shadow");
+    const rightPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+    rightPath.setAttribute("d", `M 270 ${wire.y + 10} C 320 ${wire.y + 40}, 400 ${wire.y - 20}, 500 ${wire.y}`);
+    rightPath.setAttribute("stroke", wire.color);
+    rightPath.setAttribute("stroke-width", 6);
+    rightPath.setAttribute("fill", "none");
+    rightPath.setAttribute("stroke-linecap", "round");
+    rightPath.classList.add("wire-shadow");
 
-      const spark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-      spark.setAttribute("cx", 260);
-      spark.setAttribute("cy", wire.y);
-      spark.setAttribute("r", 5);
-      spark.classList.add("spark");
+    const spark = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    spark.setAttribute("cx", 260);
+    spark.setAttribute("cy", wire.y);
+    spark.setAttribute("r", 5);
+    spark.classList.add("spark");
 
-      svg.appendChild(leftPath);
-      svg.appendChild(rightPath);
-      svg.appendChild(spark);
+    svg.appendChild(leftPath);
+    svg.appendChild(rightPath);
+    svg.appendChild(spark);
 
-      // Optional snip sound
-      // new Audio('snip.mp3').play();
-
-      setTimeout(() => spark.remove(), 600);
+    // Explosion or defusal effect
+    if (wire.id === correctWire) {
+      document.body.style.backgroundColor = "#0f0"; // green flash
+      setTimeout(() => alert("✅ Bomb Defused!"), 500);
+    } else {
+      document.body.style.backgroundColor = "#900";
+      setTimeout(() => alert("💥 Explosion!"), 500);
     }
-  </script>
+
+    setTimeout(() => spark.remove(), 600);
+    gameOver = true;
+  }
+
+  // Timer countdown (for tension)
+  let seconds = 45;
+  const timerDisplay = document.getElementById("timer");
+  const timer = setInterval(() => {
+    if (seconds <= 0 || gameOver) {
+      clearInterval(timer);
+      if (!gameOver) alert("💥 Time ran out!");
+      gameOver = true;
+      return;
+    }
+    seconds--;
+    timerDisplay.textContent = "00:" + (seconds < 10 ? "0" + seconds : seconds);
+  }, 1000);
+</script>
 </body>
 </html>
