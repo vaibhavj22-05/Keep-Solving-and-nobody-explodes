@@ -1,12 +1,17 @@
-import React from 'react'
-import Bomb from './components/Bomb.jsx'
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import FrontPage from "./pages/FrontPage";
+import GamePage from "./pages/GamePage";
+import RulesPage from "./pages/RulesPages";
 
-const App = () => {
+export default function App() {
   return (
-    <div>
-      <Bomb/>
-    </div>
-  )
+    <Router>
+      <Routes>
+        <Route path="/" element={<FrontPage />} />
+         <Route path="/rules" element={<RulesPage />} />
+        <Route path="/game" element={<GamePage />} />
+      </Routes>
+    </Router>
+  );
 }
-
-export default App

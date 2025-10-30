@@ -2,18 +2,24 @@ import React from "react";
 import TimerModule from "./TimerModule";
 import WiresModule from "./WiresModule";
 import RedButtonModule from "./RedButtonModule";
-import EmptyModule from "./EmptyModule"; // new import
+import EmptyModule from "./EmptyModule";
+import ChemicalChaosModule from "./ChemicalChaosModule";
 
-export default function Module({ type }) {
-  const moduleMap = {
-    timer: <TimerModule />,
-    wires: <WiresModule />,
-    button: <RedButtonModule />,
+export default function Module({
+  type,
+  onSolved,
+  allModulesSolved,
+  timerRunning,
+  onDisarm,
+  disarmed,
+}) {
+   const moduleMap = {
+    timer: <TimerModule running={timerRunning} disarmed={disarmed} />,
+    wires: <WiresModule onSolved={() => onSolved("wires")} />,
+    button: <RedButtonModule allModulesSolved={allModulesSolved} onDisarm={onDisarm} />,
+    chemical: <ChemicalChaosModule onSolved={onSolved} />, // 👈 Added here
+    null: <EmptyModule />,
   };
 
-  // If a valid module type exists, render it
-  if (type && moduleMap[type]) return moduleMap[type];
-
-  // Otherwise, render the empty shutter
-  return <EmptyModule />;
+  return moduleMap[type] || <EmptyModule />;
 }

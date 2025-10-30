@@ -11,7 +11,7 @@ const getModuleSetup = () => {
   const totalSlots = 6;
 
   // Always include timer, button, and wires
-  const fixedModules = ["timer", "button", "wires"];
+  const fixedModules = ["timer", "wires", "button", "chemical", null];
 
   // Fill remaining slots with null → empty shutters
   const emptySlots = Array(totalSlots - fixedModules.length).fill(null);
