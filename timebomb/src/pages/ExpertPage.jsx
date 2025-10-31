@@ -1,17 +1,3 @@
-// import { useLocation } from "react-router-dom";
-
-// export default function ExpertPage() {
-//   const { state } = useLocation();
-//   const roomCode = state?.roomCode;
-
-//   return (
-//     <div className="flex flex-col items-center justify-center h-screen bg-[#0f172a] text-white font-mono">
-//       <h1 className="text-3xl text-blue-500">📖 Expert Manual</h1>
-//       <p className="mt-4 text-gray-400">Room Code: {roomCode}</p>
-//       <p className="mt-2">This page will display the rules/manual for the modules.</p>
-//     </div>
-//   );
-// }
 import { useState } from "react";
 import { Book, Zap, AlertTriangle, Download, Beaker, Cable, Lightbulb, Cpu } from "lucide-react";
 

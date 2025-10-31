@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AlertTriangle } from "lucide-react";
 
@@ -6,6 +6,21 @@ export default function FrontPage() {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState(300);
   const [glitch, setGlitch] = useState(false);
+  const audioRef = useRef(null);
+
+  // 🎧 Play Valorant-style background sound
+  useEffect(() => {
+    const audio = new Audio("/sounds/valorant_bg.mp3"); 
+    audio.loop = true;
+    audio.volume = 0.4; 
+    audio.play().catch(() => console.log("Autoplay blocked until user interacts"));
+    audioRef.current = audio;
+
+    return () => {
+      audio.pause();
+      audio.currentTime = 0;
+    };
+  }, []);
 
   // Countdown logic
   useEffect(() => {
@@ -15,7 +30,7 @@ export default function FrontPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Glitch animation trigger
+  // Glitch animation
   useEffect(() => {
     const glitchTimer = setInterval(() => {
       setGlitch(true);
@@ -28,10 +43,19 @@ export default function FrontPage() {
   const seconds = String(timeLeft % 60).padStart(2, "0");
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen text-center text-white font-['Share_Tech_Mono'] bg-[radial-gradient(ellipse_at_center,_#1a0000_0%,_#000_70%)] overflow-hidden">
+    <div
+      className="relative flex flex-col items-center justify-center min-h-screen text-center text-white font-['Share_Tech_Mono'] 
+      bg-[radial-gradient(ellipse_at_center,_#1a0000_0%,_#000_70%)] overflow-hidden"
+      onClick={() => {
+        // allow user-initiated playback if browser blocks autoplay
+        if (audioRef.current && audioRef.current.paused) {
+          audioRef.current.play();
+        }
+      }}
+    >
       {/* Grid overlay */}
       <div className="absolute inset-0 pointer-events-none opacity-30 bg-[linear-gradient(rgba(255,0,0,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(255,0,0,0.1)_1px,transparent_1px)] bg-[size:50px_50px]" />
-      
+
       {/* Scanline effect */}
       <div className="absolute inset-0 pointer-events-none opacity-50 bg-[repeating-linear-gradient(0deg,rgba(255,255,255,0.03)_0px,transparent_2px,transparent_4px)] animate-scanline" />
 
@@ -82,7 +106,10 @@ export default function FrontPage() {
 
       {/* Play Button */}
       <button
-        onClick={() => navigate("/rules")}
+        onClick={() => {
+          if (audioRef.current) audioRef.current.pause(); // stop music on navigation
+          navigate("/rules");
+        }}
         className="relative z-10 px-16 py-6 text-2xl font-extrabold tracking-[3px] text-white rounded-xl border-[4px] border-red-500 bg-gradient-to-br from-red-600 to-red-900 shadow-[0_8px_30px_rgba(220,38,38,0.4),inset_0_-2px_10px_rgba(0,0,0,0.3)] hover:scale-110 hover:border-yellow-400 hover:shadow-[0_0_40px_rgba(220,38,38,0.8),0_0_60px_rgba(250,204,21,0.4),inset_0_-2px_10px_rgba(0,0,0,0.3)] active:scale-105 transition-all duration-300 overflow-hidden group"
       >
         <span className="relative z-10">PLAY GAME</span>
