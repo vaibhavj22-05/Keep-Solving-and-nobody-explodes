@@ -203,10 +203,10 @@ export default function RulesPage() {
         {/* Back Button */}
         <div className="flex justify-center mt-12">
           <button
-            onClick={() => navigate("/game")}
+            onClick={() => navigate("/room")}
             className="inline-flex items-center gap-3 px-6 py-3 border-2 border-cyan-400 rounded-lg text-cyan-400 font-semibold hover:border-yellow-400 hover:text-yellow-400 transition-all duration-300"
           >
-            Start Game
+            Start
           </button>
         </div>
       </div>
