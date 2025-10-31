@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-let bgmAudio = null; // Persistent global audio
+let bgmAudio = null; // Persistent module audio
 
 export default function BackgroundMusic() {
   const location = useLocation();
@@ -12,7 +12,9 @@ export default function BackgroundMusic() {
       bgmAudio.loop = true;
       bgmAudio.volume = 0.3;
 
-      // Play only after first click (browser autoplay policy)
+      // Expose globally for control elsewhere (like BombDiffused)
+      window.bgmAudio = bgmAudio;
+
       const startMusic = () => {
         bgmAudio.play().catch(() => {});
         document.removeEventListener("click", startMusic);
@@ -27,8 +29,6 @@ export default function BackgroundMusic() {
       // Resume elsewhere
       bgmAudio.play().catch(() => {});
     }
-
-    return () => {};
   }, [location]);
 
   return null;
