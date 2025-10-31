@@ -1,32 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import Module from "./modules/Module";
-import { useEffect } from "react";
+import useSound from "../hooks/useSound";
 
 export default function BombLayout() {
   const moduleStyle =
     "rounded-xl border-[3px] border-gray-700 bg-gradient-to-b from-[#2c2f34] to-[#1a1c20] shadow-[inset_0_2px_6px_rgba(255,255,255,0.08),0_10px_25px_rgba(0,0,0,0.8)] p-3 relative overflow-hidden";
 
-const getModuleSetup = () => {
-  const totalSlots = 6;
-
-  // Always include timer, button, and wires
-  const fixedModules = ["timer", "wires", "button", "chemical", null];
-
-  // Fill remaining slots with null → empty shutters
-  const emptySlots = Array(totalSlots - fixedModules.length).fill(null);
-
-  // Combine and randomize positions
-  const layout = [...fixedModules, ...emptySlots].sort(() => Math.random() - 0.5);
-
-  return layout;
-};
+  const getModuleSetup = () => {
+    const totalSlots = 6;
+    const fixedModules = ["timer", "wires", "chemical", "button", null];
+    const emptySlots = Array(totalSlots - fixedModules.length).fill(null);
+    return [...fixedModules, ...emptySlots].sort(() => Math.random() - 0.5);
+  };
 
   const [moduleSetup, setModuleSetup] = useState([]);
+  const [modulesSolved, setModulesSolved] = useState({
+    wires: false,
+    chemical: false,
+  });
+  const [buttonUnlocked, setButtonUnlocked] = useState(false);
+  const [timerRunning, setTimerRunning] = useState(true);
+  const [defused, setDefused] = useState(false);
 
+  const bgAudio = useRef(null);
+  const playSound = useSound();
+
+  // 🎵 Start game BGM
+  useEffect(() => {
+    bgAudio.current = new Audio("/sounds/gamebg.mp3");
+    bgAudio.current.loop = true;
+    bgAudio.current.volume = 0.3;
+    bgAudio.current.play();
+    return () => bgAudio.current?.pause();
+  }, []);
+
+  // 🧩 Generate module layout
   useEffect(() => {
     setModuleSetup(getModuleSetup());
   }, []);
+
+  // ✅ Check if all modules solved
+  useEffect(() => {
+    const allSolved = Object.values(modulesSolved).every(Boolean);
+    if (allSolved && !buttonUnlocked) {
+      setButtonUnlocked(true);
+      playSound("/sounds/spike.mp3"); // unlock sound
+    }
+  }, [modulesSolved]);
+
+  // 🧨 Handle red button press
+  const handleDefuse = () => {
+    if (!buttonUnlocked || defused) return;
+    setDefused(true);
+    setTimerRunning(false);
+    bgAudio.current?.pause();
+    playSound("/sounds/valorant_bg.mp3"); // defuse sound
+  };
+
+  // 🔄 Pass solved callback to modules
+  const handleModuleSolved = (name) => {
+    setModulesSolved((prev) => ({ ...prev, [name]: true }));
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[radial-gradient(circle_at_center,_#050607_0%,_#0a0c10_100%)]">
@@ -53,10 +88,17 @@ const getModuleSetup = () => {
           </div>
         ))}
 
-        {/* Render all module slots */}
+        {/* 🧩 Render module slots */}
         {moduleSetup.map((type, index) => (
           <div key={index} className={moduleStyle}>
-            <Module type={type} />
+            <Module
+              type={type}
+              onSolve={handleModuleSolved}
+              unlocked={buttonUnlocked}
+              onDefuse={handleDefuse}
+              defused={defused}
+              timerRunning={timerRunning}
+            />
           </div>
         ))}
       </motion.div>
