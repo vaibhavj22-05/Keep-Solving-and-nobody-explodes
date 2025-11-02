@@ -52,7 +52,11 @@ export default function BombDiffused() {
     };
   }, []);
 
+  // 🧹 Restart and clear storage
   const restart = () => {
+    // Clear all saved data
+    localStorage.clear();
+    sessionStorage.clear();
     window.location.href = "/";
   };
 

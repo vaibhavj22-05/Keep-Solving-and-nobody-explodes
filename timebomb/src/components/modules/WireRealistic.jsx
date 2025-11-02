@@ -19,7 +19,7 @@ export default function WireRealistic() {
   useEffect(() => {
     const sessionMarker = sessionStorage.getItem("sessionActive");
     if (!sessionMarker) {
-      // This only runs once per full page reload (new session)
+      // Only clear on first load of session
       sessionStorage.setItem("sessionActive", "true");
       localStorage.removeItem("wireSetup");
       localStorage.removeItem("correctWire");
@@ -46,7 +46,7 @@ export default function WireRealistic() {
       setWireSetup(JSON.parse(savedSetup));
       setCorrectWire(savedCorrect);
     } else {
-      // 🎲 Randomize wires (only once per session)
+      // 🎲 Randomize wires
       const colors = ["red", "blue", "green", "yellow", "white", "black"];
       const shuffled = [...colors].sort(() => 0.5 - Math.random()).slice(0, 3);
       const positions = [80, 150, 220];
@@ -68,11 +68,34 @@ export default function WireRealistic() {
   // 🧨 Redirect when bomb explodes
   useEffect(() => {
     if (status === "exploded") {
+      playSound("/sounds/explosion.mp3");
       setTimeout(() => {
         navigate("/exploded");
-      }, 1500); // small delay for sound and effect
+      }, 1500); // delay for animation/sound
     }
   }, [status, navigate]);
+
+  // ✅ Redirect when module is defused
+  useEffect(() => {
+    if (status === "defused") {
+      playSound("/sounds/spikePlant.mp3");
+      setTimeout(() => {
+        navigate("/defused");
+      }, 1500); // delay for animation/sound
+    }
+  }, [status, navigate]);
+
+  // 🧹 Clear localStorage ONLY when landing on defused/exploded page
+  useEffect(() => {
+    const path = window.location.pathname;
+    if (path === "/defused" || path === "/exploded") {
+      localStorage.removeItem("wireSetup");
+      localStorage.removeItem("correctWire");
+      localStorage.removeItem("moduleCompleted");
+      localStorage.removeItem("moduleStatus");
+      sessionStorage.removeItem("sessionActive");
+    }
+  }, []);
 
   useEffect(() => {
     if (wireSetup.length === 0 || disabled) return;
@@ -132,14 +155,13 @@ export default function WireRealistic() {
       svg.appendChild(spark);
       setTimeout(() => spark.remove(), 600);
 
+      // ✅ Mark result
       if (wire.id === correctWire) {
         setStatus("defused");
-        playSound("/sounds/spikePlant.mp3");
         localStorage.setItem("moduleCompleted", "true");
         localStorage.setItem("moduleStatus", "defused");
       } else {
         setStatus("exploded");
-        playSound("/sounds/explosion.mp3");
         localStorage.setItem("moduleCompleted", "true");
         localStorage.setItem("moduleStatus", "exploded");
       }

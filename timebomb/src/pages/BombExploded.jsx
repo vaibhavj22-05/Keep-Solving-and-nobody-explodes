@@ -22,6 +22,13 @@ export default function BombExploded() {
     shake();
   };
 
+  const restart = () => {
+    // Clear all saved data
+    localStorage.clear();
+    sessionStorage.clear();
+    window.location.href = "/";
+  };
+
   const createSparks = () => {
     const container = document.querySelector(".spark-container");
     if (!container) return;
@@ -41,10 +48,7 @@ export default function BombExploded() {
     return () => clearInterval(interval);
   }, []);
 
-  const restart = () => {
-    window.location.href = "/";
-  };
-
+  
   return (
     <div className="relative flex flex-col items-center justify-center h-screen overflow-hidden bg-black text-red-500 font-mono">
       {/* Flash effect */}

@@ -46,7 +46,7 @@ export default function App() {
         <Route path="/diffuser" element={<DiffuserPage />} />
         <Route path="/expert" element={<ExpertPage />} />
         <Route path="/exploded" element={<BombExploded />} />
-        <Route path="/Diffused" element={<BombDiffused />} />
+        <Route path="/defused" element={<BombDiffused />} />
       </Routes>
     </Router>
   );
