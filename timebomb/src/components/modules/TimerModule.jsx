@@ -1,18 +1,22 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion, useAnimation } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 export default function TimerModule() {
-  const [time, setTime] = useState(300); // 2:35
+  const [time, setTime] = useState(300); // 5 minutes
   const [exploded, setExploded] = useState(false);
   const controls = useAnimation();
   const explosionSoundRef = useRef(null);
+  const navigate = useNavigate();
 
+  // Timer countdown
   useEffect(() => {
     if (time <= 0) return;
     const timer = setInterval(() => setTime((t) => t - 1), 1000);
     return () => clearInterval(timer);
   }, [time]);
 
+  // Handle shaking, explosion, and redirection
   useEffect(() => {
     if (time <= 5 && time > 0) {
       controls.start({
@@ -30,8 +34,13 @@ export default function TimerModule() {
       if (explosionSoundRef.current) {
         explosionSoundRef.current.play();
       }
+
+      // Redirect after 5 seconds
+      setTimeout(() => {
+        navigate("/exploded");
+      }, 5000);
     }
-  }, [time, controls, exploded]);
+  }, [time, controls, exploded, navigate]);
 
   const formatTime = (t) => {
     const m = String(Math.floor(t / 60)).padStart(2, "0");

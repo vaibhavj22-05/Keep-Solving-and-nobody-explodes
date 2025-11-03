@@ -8,7 +8,7 @@ export default function WiresModule() {
 
   return (
     <>
-      {/* Compact preview */}
+      {/* Compact preview box */}
       <div
         onClick={() => setIsOpen(true)}
         className="bg-[#1f2227] border-2 border-gray-600 rounded-lg p-3 h-full cursor-pointer
@@ -18,15 +18,19 @@ export default function WiresModule() {
           {["red", "blue", "lime"].map((color, i) => (
             <div
               key={i}
-              className={`h-[5px] w-28 rounded-full`}
+              className="h-[5px] w-28 rounded-full"
               style={{ backgroundColor: color }}
             ></div>
           ))}
         </div>
       </div>
 
-      {/* Popup with realistic wire bomb */}
-      <ModulePopup isOpen={isOpen} onClose={() => setIsOpen(false)}>
+
+      <ModulePopup
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        moduleType="wires" 
+      >
         <WireRealistic />
       </ModulePopup>
     </>

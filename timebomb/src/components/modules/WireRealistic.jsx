@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 export default function WireRealistic() {
   const [correctWire, setCorrectWire] = useState("");
   const [status, setStatus] = useState("");
   const [wireSetup, setWireSetup] = useState([]);
   const [disabled, setDisabled] = useState(false);
-  const navigate = useNavigate();
 
   // 🔊 Play sound helper
   const playSound = (src) => {
@@ -15,30 +13,39 @@ export default function WireRealistic() {
     audio.play();
   };
 
-  // 🧠 Detect full reload using sessionStorage marker
+  // 🧩 Determine correct wire based on rules
+  function determineCorrectWire(wires, answer = 7) {
+    const colors = wires.map((w) => w.color);
+    const count = wires.length;
+    if (count === 3) return wires[1].id;
+    if (count === 4) return wires[2].id;
+    if (count === 5) return wires[3].id;
+    return wires[Math.floor(Math.random() * wires.length)].id;
+  }
+
+  // 🧠 Reset if new session
   useEffect(() => {
     const sessionMarker = sessionStorage.getItem("sessionActive");
     if (!sessionMarker) {
-      // Only clear on first load of session
       sessionStorage.setItem("sessionActive", "true");
       localStorage.removeItem("wireSetup");
       localStorage.removeItem("correctWire");
-      localStorage.removeItem("moduleCompleted");
-      localStorage.removeItem("moduleStatus");
+      localStorage.removeItem("wires_moduleCompleted");
+      localStorage.removeItem("wires_moduleStatus");
     }
   }, []);
 
+  // 🧩 Initialize wires
   useEffect(() => {
-    const completed = localStorage.getItem("moduleCompleted");
+    const completed = localStorage.getItem("wires_moduleCompleted");
     if (completed === "true") {
-      const prevStatus = localStorage.getItem("moduleStatus") || "defused";
+      const prevStatus =
+        localStorage.getItem("wires_moduleStatus") || "defused";
       setStatus(prevStatus);
       setDisabled(true);
-      if (prevStatus === "exploded") playSound("/sounds/explosion.mp3");
       return;
     }
 
-    // Load saved setup if available
     const savedSetup = localStorage.getItem("wireSetup");
     const savedCorrect = localStorage.getItem("correctWire");
 
@@ -46,57 +53,28 @@ export default function WireRealistic() {
       setWireSetup(JSON.parse(savedSetup));
       setCorrectWire(savedCorrect);
     } else {
-      // 🎲 Randomize wires
       const colors = ["red", "blue", "green", "yellow", "white", "black"];
-      const shuffled = [...colors].sort(() => 0.5 - Math.random()).slice(0, 3);
-      const positions = [80, 150, 220];
+      const wireCount = Math.floor(Math.random() * 3) + 3; // 3–5 wires
+      const shuffled = [...colors]
+        .sort(() => 0.5 - Math.random())
+        .slice(0, wireCount);
+      const positions = [70, 130, 190, 250, 310];
       const wires = shuffled.map((color, i) => ({
-        id: `${color}Wire`,
+        id: `${color}Wire${i}`,
         y: positions[i],
         color,
       }));
-      const randomCorrect = wires[Math.floor(Math.random() * wires.length)].id;
 
+      const correct = determineCorrectWire(wires);
       setWireSetup(wires);
-      setCorrectWire(randomCorrect);
+      setCorrectWire(correct);
 
       localStorage.setItem("wireSetup", JSON.stringify(wires));
-      localStorage.setItem("correctWire", randomCorrect);
+      localStorage.setItem("correctWire", correct);
     }
   }, []);
 
-  // 🧨 Redirect when bomb explodes
-  useEffect(() => {
-    if (status === "exploded") {
-      playSound("/sounds/explosion.mp3");
-      setTimeout(() => {
-        navigate("/exploded");
-      }, 1500); // delay for animation/sound
-    }
-  }, [status, navigate]);
-
-  // ✅ Redirect when module is defused
-  useEffect(() => {
-    if (status === "defused") {
-      playSound("/sounds/spikePlant.mp3");
-      setTimeout(() => {
-        navigate("/defused");
-      }, 1500); // delay for animation/sound
-    }
-  }, [status, navigate]);
-
-  // 🧹 Clear localStorage ONLY when landing on defused/exploded page
-  useEffect(() => {
-    const path = window.location.pathname;
-    if (path === "/defused" || path === "/exploded") {
-      localStorage.removeItem("wireSetup");
-      localStorage.removeItem("correctWire");
-      localStorage.removeItem("moduleCompleted");
-      localStorage.removeItem("moduleStatus");
-      sessionStorage.removeItem("sessionActive");
-    }
-  }, []);
-
+  // 🧩 Wire cutting logic
   useEffect(() => {
     if (wireSetup.length === 0 || disabled) return;
 
@@ -155,15 +133,17 @@ export default function WireRealistic() {
       svg.appendChild(spark);
       setTimeout(() => spark.remove(), 600);
 
-      // ✅ Mark result
+      // ✅ Module logic (no redirects now)
       if (wire.id === correctWire) {
         setStatus("defused");
-        localStorage.setItem("moduleCompleted", "true");
-        localStorage.setItem("moduleStatus", "defused");
+        playSound("/sounds/spike.mp3");
+        localStorage.setItem("wires_moduleCompleted", "true");
+        localStorage.setItem("wires_moduleStatus", "defused");
       } else {
         setStatus("exploded");
-        localStorage.setItem("moduleCompleted", "true");
-        localStorage.setItem("moduleStatus", "exploded");
+        playSound("/sounds/explosion.mp3");
+        localStorage.setItem("wires_moduleCompleted", "true");
+        localStorage.setItem("wires_moduleStatus", "exploded");
       }
       setDisabled(true);
     }
@@ -177,7 +157,7 @@ export default function WireRealistic() {
   }, [wireSetup, correctWire, status, disabled]);
 
   return (
-    <div className="relative w-[520px] h-[320px] rounded-2xl border-[3px] border-gray-700 overflow-hidden bg-[#1b1b1b] shadow-[inset_0_0_30px_#000,0_0_20px_#000] flex flex-col items-center justify-center">
+    <div className="relative w-[520px] h-[340px] rounded-2xl border-[3px] border-gray-700 overflow-hidden bg-[#1b1b1b] shadow-[inset_0_0_30px_#000,0_0_20px_#000] flex flex-col items-center justify-center">
       {/* STOP Button */}
       <button
         disabled={disabled}
@@ -191,8 +171,8 @@ export default function WireRealistic() {
             setStatus("exploded");
             setDisabled(true);
             playSound("/sounds/explosion.mp3");
-            localStorage.setItem("moduleCompleted", "true");
-            localStorage.setItem("moduleStatus", "exploded");
+            localStorage.setItem("wires_moduleCompleted", "true");
+            localStorage.setItem("wires_moduleStatus", "exploded");
           }
         }}
       >
@@ -200,24 +180,22 @@ export default function WireRealistic() {
       </button>
 
       {/* Wire End Nodes */}
-      {[70, 140, 210].map((top, i) => (
+      {wireSetup.map((wire, i) => (
         <React.Fragment key={i}>
           <div
-            className="absolute w-[20px] h-[20px] rounded-full border-2 border-[#222] shadow-[inset_0_0_3px_#000,0_0_4px_#111]"
+            className="absolute w-[20px] h-[20px] rounded-full border-2 border-[#222]"
             style={{
               left: "10px",
-              top: `${top}px`,
-              background:
-                "radial-gradient(circle at 30% 30%, #bbb, #555)",
+              top: `${wire.y - 10}px`,
+              background: "radial-gradient(circle at 30% 30%, #bbb, #555)",
             }}
           />
           <div
-            className="absolute w-[20px] h-[20px] rounded-full border-2 border-[#222] shadow-[inset_0_0_3px_#000,0_0_4px_#111]"
+            className="absolute w-[20px] h-[20px] rounded-full border-2 border-[#222]"
             style={{
               right: "10px",
-              top: `${top}px`,
-              background:
-                "radial-gradient(circle at 30% 30%, #bbb, #555)",
+              top: `${wire.y - 10}px`,
+              background: "radial-gradient(circle at 30% 30%, #bbb, #555)",
             }}
           />
         </React.Fragment>
@@ -226,7 +204,7 @@ export default function WireRealistic() {
       {/* SVG Wires */}
       <svg
         id="wires"
-        className="absolute top-0 left-0 w-[520px] h-[320px] cursor-pointer"
+        className="absolute top-0 left-0 w-[520px] h-[340px] cursor-pointer"
       >
         {wireSetup.map((wire) => (
           <path
@@ -251,7 +229,9 @@ export default function WireRealistic() {
               : "text-red-500 bg-black/70"
           }`}
         >
-          {status === "defused" ? "✅ MODULE SOLVED" : "💥 BOMB EXPLODED"}
+          {status === "defused"
+            ? "✅ MODULE SOLVED"
+            : "💥 BOMB EXPLODED"}
         </div>
       )}
 

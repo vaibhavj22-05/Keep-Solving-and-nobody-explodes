@@ -30,7 +30,7 @@ export default function BombLayout() {
   useEffect(() => {
     bgAudio.current = new Audio("/sounds/gamebg.mp3");
     bgAudio.current.loop = true;
-    bgAudio.current.volume = 0.3;
+    bgAudio.current.volume = 0.2;
     bgAudio.current.play();
     return () => bgAudio.current?.pause();
   }, []);
@@ -39,24 +39,6 @@ export default function BombLayout() {
   useEffect(() => {
     setModuleSetup(getModuleSetup());
   }, []);
-
-  // ✅ Check if all modules solved
-  useEffect(() => {
-    const allSolved = Object.values(modulesSolved).every(Boolean);
-    if (allSolved && !buttonUnlocked) {
-      setButtonUnlocked(true);
-      playSound("/sounds/spike.mp3"); // unlock sound
-    }
-  }, [modulesSolved]);
-
-  // 🧨 Handle red button press
-  const handleDefuse = () => {
-    if (!buttonUnlocked || defused) return;
-    setDefused(true);
-    setTimerRunning(false);
-    bgAudio.current?.pause();
-    playSound("/sounds/valorant_bg.mp3"); // defuse sound
-  };
 
   // 🔄 Pass solved callback to modules
   const handleModuleSolved = (name) => {
@@ -95,7 +77,6 @@ export default function BombLayout() {
               type={type}
               onSolve={handleModuleSolved}
               unlocked={buttonUnlocked}
-              onDefuse={handleDefuse}
               defused={defused}
               timerRunning={timerRunning}
             />

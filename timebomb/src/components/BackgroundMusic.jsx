@@ -10,7 +10,7 @@ export default function BackgroundMusic() {
     if (!bgmAudio) {
       bgmAudio = new Audio("/sounds/valorant_bg.mp3");
       bgmAudio.loop = true;
-      bgmAudio.volume = 0.3;
+      bgmAudio.volume = 0.01;
 
       // Expose globally for control elsewhere (like BombDiffused)
       window.bgmAudio = bgmAudio;
