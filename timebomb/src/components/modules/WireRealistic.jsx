@@ -13,14 +13,200 @@ export default function WireRealistic() {
     audio.play();
   };
 
-  // 🧩 Determine correct wire based on rules
-  function determineCorrectWire(wires, answer = 7) {
-    const colors = wires.map((w) => w.color);
-    const count = wires.length;
-    if (count === 3) return wires[1].id;
-    if (count === 4) return wires[2].id;
-    if (count === 5) return wires[3].id;
-    return wires[Math.floor(Math.random() * wires.length)].id;
+  function determineCorrectWire(wires, answer) {
+    const countColor = (color) => wires.filter((w) => w.color === color).length;
+    const hasColor = (color) => wires.some((w) => w.color === color);
+    const getIndex = (color, fromEnd = false) => {
+      const arr = wires.map((w) => w.color);
+      return fromEnd ? arr.lastIndexOf(color) : arr.indexOf(color);
+    };
+
+    const uniqueColors = [...new Set(wires.map((w) => w.color))];
+
+    // --------------------------
+    // 3-WIRE CASE
+    // --------------------------
+    if (wires.length === 3) {
+      const reds = countColor("red");
+
+      // Rule 1: Two Red Wires
+      if (reds === 2) {
+        return answer % 2 === 1
+          ? [wires[0].id]
+          : [wires[wires.length - 1].id];
+      }
+
+      // Rule 2: Blue and Green Adjacent
+      for (let i = 0; i < wires.length - 1; i++) {
+        if (
+          (wires[i].color === "blue" && wires[i + 1].color === "green") ||
+          (wires[i].color === "green" && wires[i + 1].color === "blue")
+        ) {
+          return answer % 3 === 0
+            ? [wires.find((w) => w.color === "blue").id]
+            : [wires.find((w) => w.color === "green").id];
+        }
+      }
+
+      // Rule 3: Default
+      return answer > 5 ? [wires[1].id] : [wires[wires.length - 1].id];
+    }
+
+    // --------------------------
+    // 4-WIRE CASE
+    // --------------------------
+    if (wires.length === 4) {
+      // Rule 1: No Yellow Wire
+      if (!hasColor("yellow")) {
+        const multiple2 = answer % 2 === 0;
+        const multiple3 = answer % 3 === 0;
+
+        if (multiple2 && multiple3) {
+          return [wires[0].id]; // pick 1st only
+        } else if (multiple2) {
+          return [wires[0].id]; // pick 1st only
+        } else if (multiple3) {
+          return [wires[1].id]; // pick 2nd only
+        } else {
+          return [wires[1].id];
+        }
+      }
+
+      // Rule 2: More Than One Green Wire
+      if (countColor("green") >= 2) {
+        if (answer % 2 === 0) {
+          // EVEN → previously all greens, now just first green
+          const firstGreen = wires.find((w) => w.color === "green");
+          return firstGreen ? [firstGreen.id] : [wires[0].id];
+        } else {
+          // ODD → rightmost green
+          const idx = getIndex("green", true);
+          return [wires[idx].id];
+        }
+      }
+
+      // Rule 3: Default
+      if (answer % 2 === 0) {
+        return [wires[0].id]; // pick first of pair
+      } else {
+        return [wires[1].id]; // pick first of even pair
+      }
+    }
+
+    // --------------------------
+    // 5-WIRE CASE
+    // --------------------------
+    if (wires.length === 5) {
+      const colorCounts = {};
+      wires.forEach((w) => {
+        colorCounts[w.color] = (colorCounts[w.color] || 0) + 1;
+      });
+
+      const uniqueColorCount = Object.keys(colorCounts).length;
+
+      // Rule 1: 1 Black or 1 Red Wire
+      if (countColor("black") === 1 || countColor("red") === 1) {
+        if (countColor("black") === 1) {
+          const cube = Math.round(Math.cbrt(answer));
+          const idx = Math.min(cube - 1, wires.length - 1);
+          return [wires[idx].id];
+        } else {
+          const square = Math.round(Math.sqrt(answer));
+          const idx = Math.min(square - 1, wires.length - 1);
+          return [wires[idx].id];
+        }
+      }
+
+      // Rule 2: 3 same + 2 different
+      const dominantColor = Object.keys(colorCounts).find(
+        (c) => colorCounts[c] === 3
+      );
+      if (dominantColor) {
+        if (dominantColor === "red") {
+          const idx = getIndex("red", true);
+          return [wires[idx].id];
+        }
+        if (dominantColor === "blue") {
+          return [wires[1].id];
+        }
+
+        const blackIdx = (() => {
+          let count = 0;
+          for (let i = 0; i < wires.length; i++) {
+            if (wires[i].color === "black") {
+              count++;
+              if (count === 3) return i;
+            }
+          }
+          return -1;
+        })();
+
+        if (blackIdx > 0) {
+          const uniqueColor = Object.keys(colorCounts).find(
+            (c) => colorCounts[c] === 1
+          );
+          const uniqueIdx = getIndex(uniqueColor);
+          if (uniqueIdx !== -1 && uniqueIdx < blackIdx) {
+            return [wires[uniqueIdx].id];
+          }
+        }
+      }
+
+      // Rule 3: 2 same + 2 same + 1 different
+      const pairColors = Object.keys(colorCounts).filter(
+        (c) => colorCounts[c] === 2
+      );
+      const uniqueColor = Object.keys(colorCounts).find(
+        (c) => colorCounts[c] === 1
+      );
+      if (pairColors.length === 2 && uniqueColor) {
+        const uniqueIdx = getIndex(uniqueColor);
+        if (uniqueIdx === 2) return [wires[uniqueIdx].id];
+        if (uniqueIdx === 0 || uniqueIdx === 4) {
+          const oppositePairColor = pairColors[uniqueIdx === 0 ? 1 : 0];
+          const allOfOpposite = wires
+            .map((w, i) => ({ ...w, i }))
+            .filter((w) => w.color === oppositePairColor);
+          if (allOfOpposite.length > 1) {
+            return [allOfOpposite[0].id]; // only 1 now
+          }
+        }
+        return [wires[3].id];
+      }
+
+      // Rule 4: 2 same + 3 different
+      const repeated = Object.keys(colorCounts).find(
+        (c) => colorCounts[c] === 2
+      );
+      if (repeated) {
+        if (repeated === "red") {
+          return [wires[getIndex("red")].id];
+        } else if (repeated === "blue") {
+          const idx = getIndex("blue");
+          return [wires[idx].id];
+        } else if (repeated === "green") {
+          return [wires[2].id];
+        } else {
+          return [wires[wires.length - 1].id];
+        }
+      }
+
+      // Rule 5: All different
+      if (uniqueColorCount === 5) {
+        const primaryColors = ["red", "blue", "yellow"];
+        const secondaryColors = ["green"];
+
+        if (primaryColors.includes(wires[0].color)) return [wires[4].id];
+        if (secondaryColors.includes(wires[2].color)) return [wires[2].id];
+        if (wires[4].color === "red") return [wires[2].id];
+
+        const idx = Math.min(answer - 1, wires.length - 1);
+        return [wires[idx].id];
+      }
+    }
+
+    // Default fallback
+    return [wires[0].id];
   }
 
   // 🧠 Reset if new session
@@ -74,7 +260,7 @@ export default function WireRealistic() {
     }
   }, []);
 
-  // 🧩 Wire cutting logic
+  // 🧩 Wire cutting logic (unchanged)
   useEffect(() => {
     if (wireSetup.length === 0 || disabled) return;
 
@@ -113,9 +299,9 @@ export default function WireRealistic() {
         wire.color
       );
       const rightPath = createPath(
-        `M 270 ${wire.y + 10} C 320 ${wire.y + 40}, 400 ${
-          wire.y - 20
-        }, 500 ${wire.y}`,
+        `M 270 ${wire.y + 10} C 320 ${wire.y + 40}, 400 ${wire.y - 20}, 500 ${
+          wire.y
+        }`,
         wire.color
       );
 
@@ -133,7 +319,6 @@ export default function WireRealistic() {
       svg.appendChild(spark);
       setTimeout(() => spark.remove(), 600);
 
-      // ✅ Module logic (no redirects now)
       if (wire.id === correctWire) {
         setStatus("defused");
         playSound("/sounds/spike.mp3");
@@ -211,7 +396,9 @@ export default function WireRealistic() {
             key={wire.id}
             id={wire.id}
             className="wire-shadow"
-            d={`M 20 ${wire.y} C 150 ${wire.y - 40}, 300 ${wire.y + 40}, 500 ${wire.y}`}
+            d={`M 20 ${wire.y} C 150 ${wire.y - 40}, 300 ${wire.y + 40}, 500 ${
+              wire.y
+            }`}
             stroke={wire.color}
             strokeWidth="6"
             fill="none"
@@ -229,9 +416,7 @@ export default function WireRealistic() {
               : "text-red-500 bg-black/70"
           }`}
         >
-          {status === "defused"
-            ? "✅ MODULE SOLVED"
-            : "💥 BOMB EXPLODED"}
+          {status === "defused" ? "✅ MODULE SOLVED" : "💥 BOMB EXPLODED"}
         </div>
       )}
 

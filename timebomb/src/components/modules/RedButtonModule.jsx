@@ -1,13 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export default function RedButtonModule({ allModulesSolved, onDisarm }) {
+export default function RedButtonModule({ onDisarm }) {
   const [screenRemoved, setScreenRemoved] = useState(false);
   const [pressed, setPressed] = useState(false);
+  const [allModulesSolved, setAllModulesSolved] = useState(false);
+
   const [removeSound] = useState(new Audio("/sounds/screen_whoosh.mp3"));
   const [disarmSound] = useState(new Audio("/sounds/disarm.mp3"));
 
-  // Remove translucent screen when all modules are solved
+  // 🔍 Check localStorage for all module statuses
+  useEffect(() => {
+    const checkModules = () => {
+      const modules = [
+        "wires_moduleStatus",
+        "chemical_moduleStatus",
+      ];
+
+      const allSolved = modules.every(
+        (key) => localStorage.getItem(key) === "defused"
+      );
+      setAllModulesSolved(allSolved);
+    };
+
+    // Run initially + periodically check
+    checkModules();
+    const interval = setInterval(checkModules, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 🧊 Remove translucent screen when all modules are solved
   useEffect(() => {
     if (allModulesSolved && !screenRemoved) {
       removeSound.play();
@@ -16,18 +39,22 @@ export default function RedButtonModule({ allModulesSolved, onDisarm }) {
     }
   }, [allModulesSolved, screenRemoved, removeSound]);
 
-  // Handle button press to disarm
+  // 🟥 Handle button press to disarm
   const handlePress = () => {
     if (!screenRemoved || pressed) return;
     setPressed(true);
     disarmSound.play();
-    onDisarm(); // stop timer, trigger defuse
+
+    // Store final defused state globally
+    localStorage.setItem("final_defuse", "true");
+
+    onDisarm?.(); // callback to stop timer, trigger confetti, etc.
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
       <div className="relative flex justify-center items-center">
-        {/* Translucent glass screen */}
+        {/* 🔒 Translucent glass screen */}
         <AnimatePresence>
           {!screenRemoved && (
             <motion.div
@@ -46,7 +73,7 @@ export default function RedButtonModule({ allModulesSolved, onDisarm }) {
           )}
         </AnimatePresence>
 
-        {/* Red button */}
+        {/* 🟥 Red button */}
         <motion.button
           whileTap={{ scale: screenRemoved && !pressed ? 0.9 : 1 }}
           animate={{
@@ -72,9 +99,13 @@ export default function RedButtonModule({ allModulesSolved, onDisarm }) {
         </motion.button>
       </div>
 
-      {/* Status text */}
+      {/* 🧠 Status text */}
       <div className="mt-5 text-sm text-gray-300 font-mono tracking-wider">
-        
+        {allModulesSolved
+          ? screenRemoved
+            ? "🔓 SYSTEM UNLOCKED"
+            : "✅ All modules defused..."
+          : "🔒 Waiting for modules..."}
       </div>
     </div>
   );

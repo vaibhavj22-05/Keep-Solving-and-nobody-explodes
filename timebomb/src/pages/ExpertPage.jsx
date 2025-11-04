@@ -51,279 +51,281 @@ export default function ExpertManualPage() {
   ];
 
   const moduleContent = {
-    wires: {
-      title: "Tangling Wires",
-      description:
-        "The Tangling Wires module presents a set of colored wires (3–5 total) tangled in a grid. Each wire may be red, blue, green, yellow, or black. The Defuser must determine which wire(s) to cut based on color patterns and logic rules.",
-      cases: [
+  wires: {
+  title: "Tangling Wires",
+  description:
+    "The Tangling Wires module presents 3–5 tangled colored wires. Each wire can be Red, Blue, Green, Yellow, White, or Black. The Defuser must identify and cut the correct wire(s) based on the color configuration and the numerical result from the Question Bank.",
+  cases: [
+    {
+      title: "3-Wire Case",
+      rules: [
         {
-          title: "3-Wire Case",
-          rules: [
-            {
-              name: "Rule 1: Two Red Wires",
-              condition: "If there are exactly 2 red wires",
-              steps: [
-                "→ Solve Question [no.] from the Question Bank",
-                "If the answer is ODD, cut the 1st wire",
-                "If the answer is EVEN, cut the last wire",
-              ],
-            },
-            {
-              name: "Rule 2: Blue and Green Adjacent",
-              condition:
-                "If blue and green wires are adjacent (next to each other)",
-              steps: [
-                "→ Solve Question [no.] from the Question Bank",
-                "If the answer is a MULTIPLE OF 3, cut the blue wire",
-                "If the answer is NOT a multiple of 3, cut the green wire",
-              ],
-            },
-            {
-              name: "Rule 3: Default Equation Rule",
-              condition: "If neither Rule 1 nor Rule 2 applies",
-              steps: [
-                "→ Solve Question [no.] from the Question Bank",
-                "If the answer is GREATER THAN 5, cut the MIDDLE wire",
-                "If the answer is LESS THAN OR EQUAL TO 5, cut the LAST wire",
-              ],
-            },
+          name: "Rule 1: Two Red Wires",
+          condition: "If there are exactly two red wires",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If the answer is ODD → Cut the FIRST wire",
+            "If the answer is EVEN → Cut the LAST wire",
           ],
         },
         {
-          title: "4-Wire Case",
-          rules: [
-            {
-              name: "Rule 1: No Yellow Wire",
-              condition: "If there are no yellow wires present",
-              steps: [
-                "1. Solve Question [no.] from the Question Bank",
-                "2. If answer is MULTIPLE OF 2 → Cut 1st and 3rd wires",
-                "3. If answer is MULTIPLE OF 3 → Cut all even-numbered wires (2nd and 4th)",
-                "4. If answer is MULTIPLE OF BOTH 2 AND 3 → Cut 1st and 4th wires",
-                "5. If none apply → Cut 2nd wire",
-              ],
-            },
-            {
-              name: "Rule 2: More Than One Green Wire",
-              condition: "If there are two or more green wires present",
-              steps: [
-                "1. Solve Question [no.] from the Question Bank",
-                "2. If answer is EVEN → Cut all green wires",
-                "3. If answer is ODD → Cut the rightmost green wire",
-              ],
-            },
-            {
-              name: "Rule 3: Default Case",
-              condition: "If neither Rule 1 nor Rule 2 applies",
-              steps: [
-                "1. Solve Question [no.] from the Question Bank",
-                "2. If answer is EVEN → Cut all odd-numbered wires (1st and 3rd)",
-                "3. If answer is ODD → Cut all even-numbered wires (2nd and 4th)",
-              ],
-            },
+          name: "Rule 2: Blue and Green Adjacent",
+          condition:
+            "If Blue and Green wires are directly next to each other",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If the answer is a MULTIPLE OF 3 → Cut the BLUE wire",
+            "If NOT a multiple of 3 → Cut the GREEN wire",
           ],
         },
         {
-          title: "5-Wire Case",
-          rules: [
-            {
-              name: "Rule 1: Four Same Colour Wire",
-              condition: "If there is 1 Black Wire OR 1 Red Wire present",
-              steps: [
-                "If 1 Black Wire: Find approx cube root of answer and cut that wire number",
-                "If 1 Red Wire: Find approx square root of answer and cut that wire number",
-                "Else: Solve Question [no.] from Question Bank",
-              ],
-            },
-            {
-              name: "Rule 2: 3 same + 2 different",
-              condition: "Dominant color with rogue wires",
-              steps: [
-                "Identify the color that repeats 3 times",
-                "If dominant is RED → Cut the last Red wire",
-                "If dominant is BLUE → Cut the 2nd wire",
-                "Else → Cut the unique color that appears before the 3rd Black",
-              ],
-            },
-            {
-              name: "Rule 3: 2 same + 2 same + 1 different",
-              condition: "Twin pairs and a spy",
-              steps: [
-                "Identify the unique wire and check its position",
-                "If unique is in position 3 → Cut it",
-                "If unique is in position 1 or 5 → Cut the opposite pair's second wire",
-                "Else → Cut wire 4",
-              ],
-            },
-            {
-              name: "Rule 4: 2 same + 3 different",
-              condition: "Minor repeat pattern",
-              steps: [
-                "If repeated color is RED → Cut the first of its pair",
-                "If repeated color is BLUE → Cut the wire after it (next position)",
-                "If repeated color is GREEN → Cut the middle wire",
-                "Else → Reverse rule order",
-              ],
-            },
-            {
-              name: "Rule 5: All 5 wires different colors",
-              condition: "All unique colors",
-              steps: [
-                "If 1st wire is primary color (Red/Blue/Yellow) → Cut last wire",
-                "Else if middle wire (3rd) is secondary (Green) → Cut middle wire",
-                "If last wire is Red → Cut 3rd wire",
-                "If none apply → Cut wire equal to answer",
-              ],
-            },
+          name: "Rule 3: Default Case",
+          condition: "If neither of the above conditions apply",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If the answer is GREATER THAN 5 → Cut the MIDDLE wire",
+            "If the answer is LESS THAN OR EQUAL TO 5 → Cut the LAST wire",
           ],
         },
-      ],
-      notes: [
-        "Always count wires from TOP to BOTTOM or LEFT to RIGHT",
-        "Question Bank answers determine cutting logic",
-        "Follow rules in order - stop when first rule applies",
       ],
     },
-    chemical: {
-      title: "Chemical Chaos",
-      description:
-        "The Chemical Chaos module presents 3-5 colored beakers arranged on a lab counter. The Defuser must describe each beaker's appearance (color, label, reactions) to determine correct mixing order.",
-      visualClues: [
-        { observation: "Red liquid", type: "Acid" },
-        { observation: "Blue solution", type: "Base" },
-        { observation: "Clear liquid", type: "Water" },
-        { observation: "Gray", type: "Metal" },
-        { observation: "Pale yellow", type: "Salt" },
-        { observation: "Marked with '?'", type: "Unknown / Wild card" },
-      ],
-      cases: [
+    {
+      title: "4-Wire Case",
+      rules: [
         {
-          title: "3 Beaker Case",
-          rules: [
-            {
-              name: "Rule 1: Acid–Base–Water",
-              steps: [
-                "Mix Acid + Base first → Neutralization (safe)",
-                "Add Water last → Stabilizes completely",
-                "⚠ If water is mixed before neutralization → EXPLOSION",
-              ],
-            },
-            {
-              name: "Rule 2: Acid–Metal–Water",
-              steps: [
-                "⚠ Never mix Metal + Acid first → Hydrogen gas = EXPLOSION",
-                "Mix Acid + Water first (dilution)",
-                "Then add Metal slowly → Safe neutral reaction",
-              ],
-            },
-            {
-              name: "Rule 3: Base–Metal–Salt",
-              steps: [
-                "Mix Base + Salt first → Slight neutralization, safe",
-                "⚠ If Metal added before base → Risk of oxidation (unstable)",
-                "Only add Metal last if both other liquids are already mixed",
-              ],
-            },
-            {
-              name: "Rule 4: All Reactive (Acid, Base, Metal)",
-              steps: [
-                "Neutralize Acid + Base first",
-                "Do not add Metal afterward — isolate it",
-                "If Metal must be mixed → Use Base + Metal (weak reaction, low risk)",
-              ],
-            },
+          name: "Rule 1: No Yellow Wire",
+          condition: "If there are no yellow wires present",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If answer is MULTIPLE OF 2 AND 3 → Cut the 1st wire",
+            "If answer is MULTIPLE OF 2 ONLY → Cut the 1st wire",
+            "If answer is MULTIPLE OF 3 ONLY → Cut the 2nd wire",
+            "If none apply → Cut the 2nd wire",
           ],
         },
         {
-          title: "4 Beaker Case",
-          rules: [
-            {
-              name: "Rule 1: Acid–Metal–Water–Salt",
-              steps: [
-                "⚠ Never mix Acid + Metal first → Immediate EXPLOSION",
-                "Dilute Acid + Water first",
-                "Add salt to control ion balance",
-                "Introduce Metal last → Safe mild reaction",
-              ],
-            },
-            {
-              name: "Rule 2: Two Acids, One Base, One Unknown ('?')",
-              steps: [
-                "Mix Base + weaker Acid first (lighter color)",
-                "Test '?' by dipping a drop — if bubbles form, it's reactive; discard",
-                "If no reaction → Add '?' last (acts as stabilizer)",
-              ],
-            },
-            {
-              name: "Rule 3: All Reactive (Acid, Base, Metal, Salt)",
-              steps: [
-                "Neutralize Acid + Base first",
-                "Add salt next → Acts as a shield",
-                "Add Metal last only if previous reaction was stable",
-                "⚠ If any fizzing persists before final mix → STOP, instability risk",
-              ],
-            },
+          name: "Rule 2: Two or More Green Wires",
+          condition: "If there are two or more green wires",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If answer is EVEN → Cut the FIRST green wire",
+            "If answer is ODD → Cut the RIGHTMOST green wire",
           ],
         },
         {
-          title: "5 Beaker Case",
-          rules: [
-            {
-              name: "Rule 1: Full Set (Acid, Base, Metal, Salt, Water)",
-              steps: [
-                "Mix Acid + Base → Neutralization",
-                "Add Salt next → Ionic stabilization",
-                "Add water for dilution",
-                "⚠ Metal must be added last — if fizzing occurs, STOP immediately",
-              ],
-            },
-            {
-              name: "Rule 2: Two Acids Present",
-              steps: [
-                "Identify stronger acid (darker color)",
-                "Mix strong Acid + Base first → Neutral",
-                "Add weaker Acid next → Mild reaction, manageable",
-                "Introduce Salt and Water for stabilization",
-              ],
-            },
-            {
-              name: "Rule 3: Unknown ('?') Present",
-              steps: [
-                "Mix Acid + Base → Check for color change",
-                "Add salt next if no smoke",
-                "Test '?' by adding one drop:",
-                "  • If bubbles → Reactive (treat as Metal)",
-                "  • If color fades → Neutral (treat as Water)",
-                "Proceed accordingly",
-              ],
-            },
-            {
-              name: "Rule 4: Multiple Metals or Reactive Pairings",
-              steps: [
-                "⚠ If more than one Metal → Do not mix directly",
-                "Pre-mix Acid + Water to form diluted acid",
-                "Add each Metal one by one",
-                "⚠ If continuous fizzing → STOP; isolate last metal",
-              ],
-            },
-            {
-              name: "Rule 5: No Water Present",
-              steps: [
-                "Create artificial dilution: Mix Acid + Salt first",
-                "Add Base next → Observe mild heat",
-                "Introduce Metal only after reaction cools",
-                "⚠ If temperature rises again → ABORT",
-              ],
-            },
+          name: "Rule 3: Default Case",
+          condition: "If neither Rule 1 nor Rule 2 applies",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If answer is EVEN → Cut the FIRST wire",
+            "If answer is ODD → Cut the SECOND wire",
           ],
         },
-      ],
-      notes: [
-        "Always mix in the order specified - sequence matters!",
-        "Watch for fizzing, bubbling, or color changes",
-        "Any unstable reaction = potential explosion",
       ],
     },
+    {
+      title: "5-Wire Case",
+      rules: [
+        {
+          name: "Rule 1: Single Black or Red Wire",
+          condition: "If there is exactly one Black or one Red wire",
+          steps: [
+            "→ Solve Question [no.] from the Question Bank",
+            "If only one BLACK wire: Take cube root of answer → Round → Cut that wire number",
+            "If only one RED wire: Take square root of answer → Round → Cut that wire number",
+          ],
+        },
+        {
+          name: "Rule 2: 3 Wires of Same Color + 2 Different",
+          condition:
+            "If one color appears 3 times and the remaining 2 wires are different",
+          steps: [
+            "If dominant color is RED → Cut the LAST Red wire",
+            "If dominant color is BLUE → Cut the SECOND wire",
+            "Else → Identify 3rd Black wire; Cut the unique color that appears BEFORE it",
+          ],
+        },
+        {
+          name: "Rule 3: 2 Same + 2 Same + 1 Unique",
+          condition:
+            "If there are two colors that appear twice and one color that appears once",
+          steps: [
+            "→ Identify the unique wire and its position",
+            "If the unique wire is in position 3 → Cut it",
+            "If unique wire is in position 1 or 5 → Cut the first wire of the opposite color pair",
+            "Otherwise → Cut the 4th wire",
+          ],
+        },
+        {
+          name: "Rule 4: 2 Same + 3 Different",
+          condition:
+            "If one color repeats twice and the rest are all different",
+          steps: [
+            "If repeated color is RED → Cut the FIRST Red wire",
+            "If repeated color is BLUE → Cut the FIRST Blue wire",
+            "If repeated color is GREEN → Cut the MIDDLE (3rd) wire",
+            "Else → Cut the LAST wire",
+          ],
+        },
+        {
+          name: "Rule 5: All 5 Wires Different Colors",
+          condition: "If all wires are unique colors",
+          steps: [
+            "If 1st wire is a PRIMARY color (Red, Blue, Yellow) → Cut LAST wire",
+            "If 3rd wire is Green (secondary color) → Cut MIDDLE wire",
+            "If last wire is Red → Cut 3rd wire",
+            "Otherwise → Cut wire equal to the Question Bank answer number",
+          ],
+        },
+      ],
+    },
+  ],
+  notes: [
+    "Always count wires from TOP to BOTTOM (or LEFT to RIGHT).",
+    "Follow rules in order. The first true condition determines which wire to cut.",
+    "Question Bank answers influence which wire(s) are correct.",
+    "If unclear, the fallback is always the first wire.",
+  ]},
+chemical : {
+  title: "Chemical Chaos",
+  description:
+    "The Chemical Chaos module presents 3-5 colored beakers arranged on a lab counter. The Defuser must describe each beaker's appearance (color, label, reactions) to determine correct mixing order.",
+  visualClues: [
+    { observation: "Red liquid", type: "acid" },
+    { observation: "Blue solution", type: "base" },
+    { observation: "Clear liquid", type: "water" },
+    { observation: "Gray", type: "metal" },
+    { observation: "Pale yellow", type: "salt" },
+    { observation: "Marked with '?'", type: "unknown" },
+  ],
+  cases: [
+    {
+      title: "3 Beaker Case",
+      rules: [
+        {
+          name: "Rule 1: Acid–Base–Water",
+          steps: [
+            "Mix Acid + Base first → Neutralization (safe).",
+            "Add Water last → Stabilizes completely.",
+            "⚠ If Water is mixed before neutralization → EXPLOSION.",
+          ],
+        },
+        {
+          name: "Rule 2: Acid–Metal–Water",
+          steps: [
+            "⚠ Never mix Metal + Acid first → Hydrogen gas = EXPLOSION.",
+            "Mix Acid + Water first (dilution).",
+            "Then add Metal slowly → Safe neutral reaction.",
+          ],
+        },
+        {
+          name: "Rule 3: Base–Metal–Salt",
+          steps: [
+            "Mix Base + Salt first → Slight neutralization, safe.",
+            "⚠ If Metal added before Base → Risk of oxidation (unstable).",
+            "Only add Metal last if both other liquids are already mixed.",
+          ],
+        },
+        {
+          name: "Rule 4: All Reactive (Acid, Base, Metal)",
+          steps: [
+            "Neutralize Acid + Base first.",
+            "Do not add Metal afterward — isolate it if possible.",
+            "If Metal must be mixed → Use Base + Metal (weak reaction, lower risk).",
+          ],
+        },
+      ],
+    },
+    {
+      title: "4 Beaker Case",
+      rules: [
+        {
+          name: "Rule 1: Acid–Metal–Water–Salt",
+          steps: [
+            "⚠ Never mix Acid + Metal first → Immediate EXPLOSION.",
+            "Dilute Acid by mixing with Water first.",
+            "Add Salt next to control ionic balance.",
+            "Introduce Metal last → Safe mild reaction if previous steps were stable.",
+          ],
+        },
+        {
+          name: "Rule 2: Two Acids, One Base, One Unknown ('?')",
+          steps: [
+            "Mix Base + weaker Acid first (weaker = lighter color).",
+            "Test '?' by dipping a drop — if bubbles form, it's reactive; treat as Metal/discard.",
+            "If no reaction → Add '?' last (acts as stabilizer).",
+          ],
+        },
+        {
+          name: "Rule 3: All Reactive (Acid, Base, Metal, Salt)",
+          steps: [
+            "Neutralize Acid + Base first.",
+            "Add Salt next → Acts as a shield/stabilizer.",
+            "Add Metal last only if previous reaction was stable.",
+            "⚠ If any fizzing persists before final mix → STOP; instability risk.",
+          ],
+        },
+      ],
+    },
+    {
+      title: "5 Beaker Case",
+      rules: [
+        {
+          name: "Rule 1: Full Set (Acid, Base, Metal, Salt, Water)",
+          steps: [
+            "Mix Acid + Base → Neutralization.",
+            "Add Salt next → Ionic stabilization.",
+            "Add Water for dilution.",
+            "⚠ Metal must be added last — if fizzing occurs at any point, STOP immediately.",
+          ],
+        },
+        {
+          name: "Rule 2: Two Acids Present",
+          steps: [
+            "Identify stronger acid (darker color = stronger).",
+            "Mix strong Acid + Base first → Neutral.",
+            "Add weaker Acid next → Mild reaction, manageable.",
+            "Introduce Salt and Water afterward for stabilization.",
+          ],
+        },
+        {
+          name: "Rule 3: Unknown ('?') Present",
+          steps: [
+            "Mix Acid + Base → Check for color change or smoke.",
+            "Add Salt next if no smoke.",
+            "Test '?' by adding one drop:",
+            "  • If bubbles → Reactive (treat as Metal).",
+            "  • If color fades → Neutral (treat as Water).",
+            "Proceed accordingly based on the test.",
+          ],
+        },
+        {
+          name: "Rule 4: Multiple Metals or Reactive Pairings",
+          steps: [
+            "⚠ If more than one Metal → Do not mix Metals directly.",
+            "Pre-mix Acid + Water to form diluted acid before adding metals.",
+            "Add each Metal one by one while observing for fizzing.",
+            "⚠ If continuous fizzing occurs → STOP and isolate last metal.",
+          ],
+        },
+        {
+          name: "Rule 5: No Water Present",
+          steps: [
+            "Create artificial dilution: Mix Acid + Salt first.",
+            "Add Base next → Observe for mild heat.",
+            "Introduce Metal only after reaction cools.",
+            "⚠ If temperature rises again → ABORT.",
+          ],
+        },
+      ],
+    },
+  ],
+  notes: [
+    "Always mix in the order specified — sequence matters!",
+    "Watch for fizzing, bubbling, color changes, or smoke.",
+    "Any unstable reaction = potential explosion; STOP immediately and isolate.",
+  ],
+},
     light: {
       title: "Light Merge",
       description:
