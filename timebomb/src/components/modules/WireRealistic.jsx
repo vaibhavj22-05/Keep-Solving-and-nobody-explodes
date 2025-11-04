@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function WireRealistic() {
   const [correctWire, setCorrectWire] = useState("");
   const [status, setStatus] = useState("");
   const [wireSetup, setWireSetup] = useState([]);
   const [disabled, setDisabled] = useState(false);
+  const navigate = useNavigate();
 
   // 🔊 Play sound helper
   const playSound = (src) => {
@@ -21,7 +23,7 @@ export default function WireRealistic() {
       return fromEnd ? arr.lastIndexOf(color) : arr.indexOf(color);
     };
 
-    const uniqueColors = [...new Set(wires.map((w) => w.color))];
+    // const uniqueColors = [...new Set(wires.map((w) => w.color))];
 
     // --------------------------
     // 3-WIRE CASE
@@ -62,11 +64,11 @@ export default function WireRealistic() {
         const multiple3 = answer % 3 === 0;
 
         if (multiple2 && multiple3) {
-          return [wires[0].id]; // pick 1st only
+          return [wires[0].id];
         } else if (multiple2) {
-          return [wires[0].id]; // pick 1st only
+          return [wires[0].id];
         } else if (multiple3) {
-          return [wires[1].id]; // pick 2nd only
+          return [wires[1].id];
         } else {
           return [wires[1].id];
         }
@@ -75,11 +77,9 @@ export default function WireRealistic() {
       // Rule 2: More Than One Green Wire
       if (countColor("green") >= 2) {
         if (answer % 2 === 0) {
-          // EVEN → previously all greens, now just first green
           const firstGreen = wires.find((w) => w.color === "green");
           return firstGreen ? [firstGreen.id] : [wires[0].id];
         } else {
-          // ODD → rightmost green
           const idx = getIndex("green", true);
           return [wires[idx].id];
         }
@@ -87,9 +87,9 @@ export default function WireRealistic() {
 
       // Rule 3: Default
       if (answer % 2 === 0) {
-        return [wires[0].id]; // pick first of pair
+        return [wires[0].id];
       } else {
-        return [wires[1].id]; // pick first of even pair
+        return [wires[1].id];
       }
     }
 
@@ -168,7 +168,7 @@ export default function WireRealistic() {
             .map((w, i) => ({ ...w, i }))
             .filter((w) => w.color === oppositePairColor);
           if (allOfOpposite.length > 1) {
-            return [allOfOpposite[0].id]; // only 1 now
+            return [allOfOpposite[0].id];
           }
         }
         return [wires[3].id];
@@ -205,7 +205,6 @@ export default function WireRealistic() {
       }
     }
 
-    // Default fallback
     return [wires[0].id];
   }
 
@@ -240,7 +239,7 @@ export default function WireRealistic() {
       setCorrectWire(savedCorrect);
     } else {
       const colors = ["red", "blue", "green", "yellow", "white", "black"];
-      const wireCount = Math.floor(Math.random() * 3) + 3; // 3–5 wires
+      const wireCount = Math.floor(Math.random() * 3) + 3;
       const shuffled = [...colors]
         .sort(() => 0.5 - Math.random())
         .slice(0, wireCount);
@@ -260,7 +259,7 @@ export default function WireRealistic() {
     }
   }, []);
 
-  // 🧩 Wire cutting logic (unchanged)
+  // 🧩 Wire cutting logic
   useEffect(() => {
     if (wireSetup.length === 0 || disabled) return;
 
@@ -321,7 +320,6 @@ export default function WireRealistic() {
 
       if (wire.id === correctWire) {
         setStatus("defused");
-        playSound("/sounds/spike.mp3");
         localStorage.setItem("wires_moduleCompleted", "true");
         localStorage.setItem("wires_moduleStatus", "defused");
       } else {
@@ -329,6 +327,7 @@ export default function WireRealistic() {
         playSound("/sounds/explosion.mp3");
         localStorage.setItem("wires_moduleCompleted", "true");
         localStorage.setItem("wires_moduleStatus", "exploded");
+        setTimeout(() => navigate("/exploded"), 1500); // 🔥 Redirect after 1.5s
       }
       setDisabled(true);
     }
@@ -339,7 +338,7 @@ export default function WireRealistic() {
         if (path) path.removeEventListener("click", () => cutWire(wire));
       });
     };
-  }, [wireSetup, correctWire, status, disabled]);
+  }, [wireSetup, correctWire, status, disabled, navigate]);
 
   return (
     <div className="relative w-[520px] h-[340px] rounded-2xl border-[3px] border-gray-700 overflow-hidden bg-[#1b1b1b] shadow-[inset_0_0_30px_#000,0_0_20px_#000] flex flex-col items-center justify-center">
@@ -358,6 +357,7 @@ export default function WireRealistic() {
             playSound("/sounds/explosion.mp3");
             localStorage.setItem("wires_moduleCompleted", "true");
             localStorage.setItem("wires_moduleStatus", "exploded");
+            setTimeout(() => navigate("/exploded"), 1500); // 🔥 Redirect after 1.5s
           }
         }}
       >

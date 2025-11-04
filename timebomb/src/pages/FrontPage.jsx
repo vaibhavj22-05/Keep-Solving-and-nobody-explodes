@@ -12,7 +12,7 @@ export default function FrontPage() {
   useEffect(() => {
     const audio = new Audio("/sounds/valorant_bg.mp3"); 
     audio.loop = true;
-    audio.volume = 0.4; 
+    audio.volume = 0.1; 
     audio.play().catch(() => console.log("Autoplay blocked until user interacts"));
     audioRef.current = audio;
 

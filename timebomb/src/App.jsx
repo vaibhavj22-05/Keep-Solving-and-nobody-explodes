@@ -31,9 +31,7 @@ function LandingWrapper() {
 export default function App() {
   return (
     <Router>
-      {/* 🎵 Persistent background music */}
       <BackgroundMusic />
-
       <Routes>
         {/* From FrontPage/Game/Rules flow */}
         <Route path="/" element={<FrontPage />} />

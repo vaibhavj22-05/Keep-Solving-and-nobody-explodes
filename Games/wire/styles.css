@@ -1,0 +1,26 @@
+body {
+  background: #111;
+  color: white;
+  font-family: monospace;
+  text-align: center;
+  padding-top: 40px;
+}
+
+.wire {
+  width: 300px;
+  height: 8px;
+  border-radius: 5px;
+  margin: 15px auto;
+  cursor: pointer;
+  transition: opacity 0.3s, transform 0.2s;
+}
+
+.wire.cut {
+  opacity: 0.2;
+  transform: scaleX(0.5);
+}
+
+#result {
+  margin-top: 20px;
+  font-size: 1.5rem;
+}

@@ -1,35 +1,35 @@
+// BackgroundMusic.jsx
 import React, { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 
-let bgmAudio = null; // Persistent module audio
+let bgmAudio = null; // persistent across renders
 
 export default function BackgroundMusic() {
   const location = useLocation();
 
   useEffect(() => {
+    const excludedScreens = ["/game",'/exploded','/defused']; // 👈 routes where bgm should stop
+
+    // Initialize BGM once
     if (!bgmAudio) {
       bgmAudio = new Audio("/sounds/valorant_bg.mp3");
       bgmAudio.loop = true;
-      bgmAudio.volume = 0.01;
-
-      // Expose globally for control elsewhere (like BombDiffused)
-      window.bgmAudio = bgmAudio;
-
-      const startMusic = () => {
-        bgmAudio.play().catch(() => {});
-        document.removeEventListener("click", startMusic);
-      };
-      document.addEventListener("click", startMusic, { once: true });
+      bgmAudio.volume = 0.05;
+      bgmAudio.play().catch(() => {}); // avoid autoplay block
     }
 
-    // Pause BGM on GamePage
-    if (location.pathname === "/game") {
+    // Stop on excluded screens
+    if (excludedScreens.includes(location.pathname)) {
       bgmAudio.pause();
+      bgmAudio.currentTime = 0; // reset
     } else {
-      // Resume elsewhere
-      bgmAudio.play().catch(() => {});
+      if (bgmAudio.paused) {
+        bgmAudio.play().catch(() => {});
+      }
     }
-  }, [location]);
+
+    return () => {};
+  }, [location.pathname]);
 
   return null;
 }

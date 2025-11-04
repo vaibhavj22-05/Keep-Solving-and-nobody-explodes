@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ChemicalChaosGame() {
+  const navigate = useNavigate();
+
   const CHEMICALS = [
     { name: "Acid", color: "#ff4b4b", type: "acid" },
     { name: "Base", color: "#4b7bff", type: "base" },
@@ -54,7 +57,7 @@ export default function ChemicalChaosGame() {
     const statusLS = localStorage.getItem("chemical_moduleStatus");
     const savedAnswer = localStorage.getItem("chemicalChaosAnswer");
 
-    // ✅ If module already solved, restore solved state
+    // ✅ Restore solved module
     if (completed === "true" && statusLS === "defused") {
       const savedBeakers = JSON.parse(localStorage.getItem("chemicalChaosBeakers"));
       const savedCorrect = JSON.parse(savedAnswer);
@@ -66,7 +69,7 @@ export default function ChemicalChaosGame() {
       return;
     }
 
-    // 🧪 Generate new random beakers (3–5)
+    // 🧪 Generate random beakers (3–5)
     const count = Math.floor(Math.random() * 3) + 3;
     const selected = [...CHEMICALS]
       .sort(() => 0.5 - Math.random())
@@ -78,12 +81,22 @@ export default function ChemicalChaosGame() {
     setBeakers(selected);
     setCorrectOrder(correct);
 
-    // 🧠 Save data to localStorage immediately
+    // 🧠 Save to localStorage
     localStorage.setItem("chemicalChaosAnswer", JSON.stringify(correct));
     localStorage.setItem("chemicalChaosBeakers", JSON.stringify(selected));
     localStorage.setItem("chemical_moduleCompleted", "false");
     localStorage.setItem("chemical_moduleStatus", "in_progress");
   }, []);
+
+  // 🚨 Redirect after explosion
+  useEffect(() => {
+    if (status === "exploded") {
+      const timer = setTimeout(() => {
+        navigate("/exploded");
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
 
   const handleBeakerClick = (b) => {
     if (status !== "in_progress") return;
@@ -158,7 +171,6 @@ export default function ChemicalChaosGame() {
                   : "hover:-translate-y-1"
               }`}
             >
-              {/* Removed name label */}
               <div
                 className="absolute bottom-0 w-full h-3/5 rounded-b-xl transition-all duration-700"
                 style={{ backgroundColor: b.color }}

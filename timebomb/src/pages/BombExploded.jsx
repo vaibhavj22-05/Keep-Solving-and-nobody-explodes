@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 
 export default function BombExploded() {
-  // Shake effect
+  // 💥 Shake screen animation
   const shakeScreen = () => {
     const intensity = 10;
     const duration = 500;
@@ -23,7 +23,7 @@ export default function BombExploded() {
   };
 
   const restart = () => {
-    // Clear all saved data
+    // 🧹 Clear all data and restart
     localStorage.clear();
     sessionStorage.clear();
     window.location.href = "/";
@@ -43,16 +43,36 @@ export default function BombExploded() {
   };
 
   useEffect(() => {
+    // 🚨 Stop all previous sounds
+    const stopAllAudio = () => {
+      const audios = document.querySelectorAll("audio");
+      audios.forEach((a) => {
+        a.pause();
+        a.currentTime = 0;
+      });
+    };
+
+    stopAllAudio();
+
+    // 🔊 Play the endgame sound
+    const victorySound = new Audio("/sounds/endgame.mp3");
+    victorySound.volume = 0.7;
+    victorySound.play().catch(() => {
+      console.warn("Autoplay blocked — user interaction may be required.");
+    });
+
+    // 💥 Create sparks and shake
     createSparks();
     const interval = setInterval(shakeScreen, 2000);
+
     return () => clearInterval(interval);
   }, []);
 
-  
   return (
     <div className="relative flex flex-col items-center justify-center h-screen overflow-hidden bg-black text-red-500 font-mono">
       {/* Flash effect */}
       <div className="absolute inset-0 bg-[radial-gradient(circle,rgba(255,0,0,0.8)_0%,rgba(0,0,0,0)_80%)] opacity-0 animate-[flash_2s_infinite]" />
+
       <div className="spark-container absolute inset-0 z-10 overflow-hidden"></div>
 
       <h1 className="text-6xl font-extrabold uppercase tracking-widest text-red-500 animate-[flicker_0.1s_infinite,glow_2s_infinite] z-20">
@@ -61,6 +81,7 @@ export default function BombExploded() {
       <p className="mt-4 text-red-300 text-xl z-20">
         Mission failed. Try again next time.
       </p>
+
       <button
         onClick={restart}
         className="mt-8 px-8 py-3 bg-red-700 text-white text-lg rounded-lg shadow-lg hover:bg-red-600 hover:scale-110 transition-all z-20"

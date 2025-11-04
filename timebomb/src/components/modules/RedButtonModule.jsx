@@ -6,8 +6,6 @@ export default function RedButtonModule({ onDisarm }) {
   const [pressed, setPressed] = useState(false);
   const [allModulesSolved, setAllModulesSolved] = useState(false);
 
-  const [removeSound] = useState(new Audio("/sounds/screen_whoosh.mp3"));
-  const [disarmSound] = useState(new Audio("/sounds/disarm.mp3"));
 
   // 🔍 Check localStorage for all module statuses
   useEffect(() => {
@@ -33,17 +31,15 @@ export default function RedButtonModule({ onDisarm }) {
   // 🧊 Remove translucent screen when all modules are solved
   useEffect(() => {
     if (allModulesSolved && !screenRemoved) {
-      removeSound.play();
       const delay = setTimeout(() => setScreenRemoved(true), 1000);
       return () => clearTimeout(delay);
     }
-  }, [allModulesSolved, screenRemoved, removeSound]);
+  }, [allModulesSolved, screenRemoved]);
 
   // 🟥 Handle button press to disarm
   const handlePress = () => {
     if (!screenRemoved || pressed) return;
     setPressed(true);
-    disarmSound.play();
 
     // Store final defused state globally
     localStorage.setItem("final_defuse", "true");

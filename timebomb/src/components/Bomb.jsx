@@ -28,7 +28,7 @@ export default function BombLayout() {
 
   // 🎵 Start game BGM
   useEffect(() => {
-    bgAudio.current = new Audio("/sounds/gamebg.mp3");
+    bgAudio.current = new Audio("/sounds/spike.mp3");
     bgAudio.current.loop = true;
     bgAudio.current.volume = 0.2;
     bgAudio.current.play();

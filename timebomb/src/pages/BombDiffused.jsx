@@ -67,7 +67,7 @@ export default function BombDiffused() {
       <div className="particle-container absolute inset-0 z-10 overflow-hidden"></div>
 
       <h1 className="text-6xl font-extrabold uppercase tracking-widest text-green-400 animate-[flicker_0.15s_infinite,successglow_2s_infinite] z-20">
-        ✅ Bomb Diffused!
+        ✅ Bomb Defused!
       </h1>
       <p className="mt-4 text-green-300 text-xl z-20">
         Excellent work, Agent. The world is safe... for now.
