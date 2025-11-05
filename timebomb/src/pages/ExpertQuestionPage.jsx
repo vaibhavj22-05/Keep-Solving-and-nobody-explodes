@@ -1,74 +1,89 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import socket from "../socket";
+import { AlertTriangle, MessageSquare } from "lucide-react";
 
 export default function ExpertQuestionPage() {
-  const [questionData, setQuestionData] = useState(null);
-  const [selected, setSelected] = useState("");
+  const [question, setQuestion] = useState(null);
+  const navigate = useNavigate();
+
+  // Load stored question if available
   useEffect(() => {
-  console.log("👀 ExpertQuestionPage mounted, listening for promptQuestion...");
-}, []);
-
-
-  useEffect(() => {
-    socket.on("promptQuestion", (data) => {
-      console.log("🧠 Received question:", data);
-      setQuestionData(data);
-      setSelected("");
-    });
-
-    return () => socket.off("promptQuestion");
+    const stored = localStorage.getItem("currentQuestion");
+    if (stored) setQuestion(JSON.parse(stored));
   }, []);
 
-  const handleSubmit = () => {
-    if (!questionData || !selected) return;
-    socket.emit("submitAnswer", {
-      roomCode: questionData.roomCode,
-      moduleId: questionData.moduleId,
-      selectedAnswer: selected,
-    });
+  // Listen for new question updates
+  useEffect(() => {
+  const handleQuestion = (data) => {
+    console.log("🧩 New question received:", data);
+    setQuestion(data);
+    localStorage.setItem(
+      "currentQuestion",
+      JSON.stringify({ question: data.question, answer: data.answer, moduleId: data.moduleId })
+    );
   };
 
-  if (!questionData) {
+  socket.on("promptQuestion", handleQuestion);
+
+  return () => socket.off("promptQuestion", handleQuestion);
+}, []);
+
+  if (!question) {
     return (
-      <div className="flex h-screen items-center justify-center text-xl text-gray-400">
-        Waiting for a module to open...
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center font-mono">
+        <AlertTriangle className="w-10 h-10 text-yellow-400 mb-3" />
+        <p className="text-gray-400 text-lg">
+          Waiting for a new question from the diffuser...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0e0e0e] text-white">
-      <div className="bg-[#1c1c1c] p-8 rounded-2xl shadow-lg w-[480px] text-center border border-gray-700">
-        <h1 className="text-2xl font-bold mb-6">Expert Module: {questionData.moduleId}</h1>
-        <h2 className="text-lg mb-6">{questionData.question}</h2>
+    <div className="min-h-screen bg-black text-white font-mono flex flex-col items-center justify-center relative overflow-hidden px-6">
+      {/* Background grid effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cyan-900/30 via-black to-black pointer-events-none" />
+      <div className="absolute inset-0 opacity-20 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgba(34,211,238,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,0.3) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+      </div>
 
-        <div className="flex flex-col gap-3 mb-6">
-          {questionData.choices?.map((choice, index) => (
-            <button
-              key={index}
-              onClick={() => setSelected(choice)}
-              className={`px-4 py-2 rounded-lg border transition ${
-                selected === choice
-                  ? "bg-blue-600 border-blue-500 text-white"
-                  : "bg-gray-800 border-gray-600 hover:bg-gray-700"
-              }`}
-            >
-              {choice}
-            </button>
-          ))}
+      {/* Header */}
+      <div className="mb-8 text-center z-10">
+        <h1 className="text-4xl font-black text-cyan-400 drop-shadow-lg mb-2">
+          EXPERT QUESTION
+        </h1>
+        <p className="text-gray-500 tracking-widest">
+          Awaiting expert guidance...
+        </p>
+      </div>
+
+      {/* Question Card */}
+      <div className="relative z-10 bg-gray-900/70 border-2 border-cyan-500 rounded-2xl p-8 max-w-3xl w-full backdrop-blur-md shadow-lg">
+        <div className="flex items-center gap-3 mb-4">
+          <MessageSquare className="w-6 h-6 text-cyan-400" />
+          <h2 className="text-xl font-bold text-cyan-300">Incoming Question</h2>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={!selected}
-          className={`w-full py-2 rounded-lg font-semibold transition ${
-            selected
-              ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-gray-600 cursor-not-allowed text-gray-300"
-          }`}
-        >
-          Submit Answer
-        </button>
+        <p className="text-lg text-gray-200 leading-relaxed mb-4">
+          {question.question || "No question text available."}
+        </p>
+
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => navigate("/expert")}
+            className="px-6 py-3 bg-cyan-600 hover:bg-cyan-500 border-2 border-cyan-400 rounded-lg font-bold tracking-wider transition-all hover:scale-105 active:scale-95"
+          >
+            ← Back to Manual
+          </button>
+        </div>
       </div>
     </div>
   );

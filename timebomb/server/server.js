@@ -5,36 +5,52 @@ import { Server } from "socket.io";
 import cors from "cors";
 import fs from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 
+// --- Fix __dirname in ES modules ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// --- Express & HTTP server setup ---
 const app = express();
 app.use(cors());
-app.use(express.static(path.join(process.cwd(), "public"))); // serve public files
+app.use(express.static(path.join(__dirname, "public")));
+
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
+// --- Room storage ---
 const rooms = {}; // { CODE: { players: [], roles: {} } }
 
+// --- Utility: generate room code ---
 function generateRoomCode() {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  return Array.from({ length: 5 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+  return Array.from({ length: 5 }, () =>
+    chars[Math.floor(Math.random() * chars.length)]
+  ).join("");
 }
 
-// ✅ Load questions.json
+// --- Load questions.json ---
 let questions = {};
-const questionsPath = path.join(process.cwd(), "data", "questions.json");
+const questionsPath = path.join(__dirname, "data", "questions.json");
 try {
   const raw = fs.readFileSync(questionsPath, "utf-8");
   questions = JSON.parse(raw);
-  console.log("✅ Loaded questions.json");
+  console.log("✅ Loaded questions.json with keys:", Object.keys(questions));
 } catch (err) {
-  console.warn("⚠️ Could not load questions.json from", questionsPath, err.message);
+  console.warn(
+    "⚠️ Could not load questions.json from",
+    questionsPath,
+    err.message
+  );
   questions = {};
 }
 
+// --- Socket.IO ---
 io.on("connection", (socket) => {
   console.log("🔌 connected", socket.id);
 
-  // ✅ Create Room
+  // --- Create Room ---
   socket.on("create-room", () => {
     const code = generateRoomCode();
     rooms[code] = { players: [socket.id], roles: {} };
@@ -43,14 +59,13 @@ io.on("connection", (socket) => {
     socket.emit("room-created", code);
   });
 
-  // ✅ Join Room
+  // --- Join Room ---
   socket.on("join-room", (code) => {
     const room = rooms[code];
     if (!room) {
       socket.emit("error", "Invalid room code");
       return;
     }
-
     if (room.players.length >= 2) {
       socket.emit("error", "Room full");
       return;
@@ -58,7 +73,14 @@ io.on("connection", (socket) => {
 
     room.players.push(socket.id);
     socket.join(code);
-    console.log("👥 Player joined:", socket.id, "Room:", code, "Players:", room.players);
+    console.log(
+      "👥 Player joined:",
+      socket.id,
+      "Room:",
+      code,
+      "Players:",
+      room.players
+    );
 
     if (room.players.length === 2) {
       console.log("🚀 Both players joined — Emitting 'room-ready'");
@@ -68,18 +90,18 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ✅ Choose Role
+  // --- Choose Role ---
   socket.on("choose-role", ({ roomCode, role }) => {
     const room = rooms[roomCode];
     if (!room) return;
 
     const other = room.players.find((id) => id !== socket.id);
-    if (Object.keys(room.roles).length === 0) {
-      // first player chooses
+    if (!room.roles[socket.id]) {
       room.roles[socket.id] = role;
       if (other) {
         const otherRole = role === "diffuser" ? "expert" : "diffuser";
         room.roles[other] = otherRole;
+
         io.to(socket.id).emit("role-assigned", { yourRole: role });
         io.to(other).emit("role-assigned", { yourRole: otherRole });
       } else {
@@ -88,10 +110,12 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ✅ Diffuser opens module -> send question to expert
+  // --- Diffuser opens module -> send question to expert ---
   socket.on("moduleOpened", ({ roomCode, moduleId }) => {
     try {
-      console.log(`📣 moduleOpened: room=${roomCode} module=${moduleId} by ${socket.id}`);
+      console.log(
+        `📣 moduleOpened: room=${roomCode} module=${moduleId} by ${socket.id}`
+      );
 
       const room = rooms[roomCode];
       if (!room) {
@@ -107,28 +131,27 @@ io.on("connection", (socket) => {
         return;
       }
 
-      // 🔹 Pick a random question for this module
+      // --- Get question ---
       const moduleQuestions = questions[moduleId];
       if (!moduleQuestions || moduleQuestions.length === 0) {
         socket.emit("error", `No questions configured for module ${moduleId}`);
         return;
       }
 
-      const q = moduleQuestions[Math.floor(Math.random() * moduleQuestions.length)];
+      const q =
+        moduleQuestions[Math.floor(Math.random() * moduleQuestions.length)];
       const questionIndex = moduleQuestions.indexOf(q);
 
-      // 🧠 Store for tracking
       room.lastQuestion = { moduleId, questionIndex };
 
-      // 👨‍🔬 Send question to expert (changed from 'show-question' → 'promptQuestion')
+      // --- Send question to expert ---
       io.to(expertSocketId).emit("promptQuestion", {
         roomCode,
         moduleId,
         question: q.question,
-        choices: q.choices || ["A", "B", "C", "D"], // default fallback
       });
 
-      // 💣 Send correct answer privately to diffuser
+      // --- Send correct answer privately to diffuser ---
       io.to(socket.id).emit("wire-answer", {
         roomCode,
         moduleId,
@@ -136,17 +159,19 @@ io.on("connection", (socket) => {
       });
 
       console.log("📡 Sent promptQuestion to expert:", expertSocketId);
-
     } catch (err) {
       console.error("Error in moduleOpened handler:", err);
       socket.emit("error", "Server error opening module");
     }
   });
 
-  // ✅ Expert submits answer
+  // --- Expert submits answer ---
   socket.on("submitAnswer", ({ roomCode, moduleId, selectedAnswer }) => {
     try {
-      console.log(`✉️ submitAnswer in room=${roomCode} module=${moduleId}:`, selectedAnswer);
+      console.log(
+        `✉️ submitAnswer in room=${roomCode} module=${moduleId}:`,
+        selectedAnswer
+      );
 
       const room = rooms[roomCode];
       if (!room) return;
@@ -162,7 +187,7 @@ io.on("connection", (socket) => {
     }
   });
 
-  // ✅ Disconnect cleanup
+  // --- Disconnect cleanup ---
   socket.on("disconnect", () => {
     console.log("❌ Disconnected", socket.id);
     for (const code of Object.keys(rooms)) {
@@ -174,4 +199,5 @@ io.on("connection", (socket) => {
   });
 });
 
+// --- Start server ---
 server.listen(5000, () => console.log("🚀 Server running on 5000"));

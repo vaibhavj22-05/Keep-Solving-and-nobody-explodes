@@ -29,13 +29,16 @@ export default function ExpertPage() {
   const navigate = useNavigate();
 
 useEffect(() => {
-  socket.on("promptQuestion", (data) => {
-    localStorage.setItem("currentQuestion", JSON.stringify(data));
-    // navigate("/expert-question");
-  });
+    socket.on("promptQuestion", (data) => {
+      console.log("🎯 Question received:", data);
+      // Save the question for persistence
+      localStorage.setItem("currentQuestion", JSON.stringify(data));
+      // Navigate to the question page
+      navigate("/expert-question");
+    });
 
-  return () => socket.off("promptQuestion");
-}, []);
+    return () => socket.off("promptQuestion");
+  }, [navigate]);
 
   const modules = [
     {
