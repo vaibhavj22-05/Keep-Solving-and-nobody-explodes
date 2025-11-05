@@ -7,13 +7,14 @@ export default function DiffuserPage() {
 
   const handlePlayGame = () => {
     console.log("🎮 Redirecting to Game Page with room:", roomCode);
+    // pass the roomCode forward to /game so Bomb can read it from location.state
     navigate("/game", { state: { roomCode } });
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-[#111827] text-white font-mono">
       <h1 className="text-3xl text-red-500 mb-4">💣 Diffuser Interface</h1>
-      <p className="text-gray-400 mb-2">Room Code: {roomCode}</p>
+      <p className="text-gray-400 mb-2">Room Code: {roomCode ?? "N/A"}</p>
       <p className="mb-6 text-sm">This will show the full time bomb with all modules.</p>
 
       <button

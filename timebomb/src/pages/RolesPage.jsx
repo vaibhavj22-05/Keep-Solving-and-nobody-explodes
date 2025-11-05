@@ -22,8 +22,11 @@ export default function RolesPage() {
       setStatus(`✅ You are the ${yourRole.toUpperCase()}!`);
 
       setTimeout(() => {
-        if (yourRole === "diffuser") navigate("/diffuser", { replace: true });
-        else navigate("/expert", { replace: true });
+        if (yourRole === "diffuser") {
+          navigate("/diffuser", { replace: true, state: { roomCode } }); // ✅ FIXED
+        } else {
+          navigate("/expert", { replace: true, state: { roomCode } }); // ✅ FIXED
+        }
       }, 1500);
     });
 
@@ -31,7 +34,7 @@ export default function RolesPage() {
       socket.off("waiting-for-player");
       socket.off("role-assigned");
     };
-  }, [navigate]);
+  }, [navigate, roomCode]);
 
   const handleChoose = (role) => {
     console.log("🧩 Role chosen:", role);

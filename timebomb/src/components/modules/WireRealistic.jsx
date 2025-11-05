@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import socket from "../../socket";
 
 export default function WireRealistic() {
   const [correctWire, setCorrectWire] = useState("");
@@ -14,16 +15,28 @@ export default function WireRealistic() {
     audio.volume = 0.6;
     audio.play();
   };
+  // Notify the server that the "wire" module opened
+useEffect(() => {
+  const roomCode = localStorage.getItem("roomCode"); // should already be set when joining/creating room
+  if (roomCode) {
+    socket.emit("moduleOpened", { roomCode, moduleId: "wires" });
+    console.log("📡 Module Opened: wires");
+  }
+}, []);
 
+
+
+  // 🧩 Logic to determine the correct wire
   function determineCorrectWire(wires, answer) {
+    if (!wires || wires.length === 0) return [];
+
     const countColor = (color) => wires.filter((w) => w.color === color).length;
     const hasColor = (color) => wires.some((w) => w.color === color);
     const getIndex = (color, fromEnd = false) => {
       const arr = wires.map((w) => w.color);
-      return fromEnd ? arr.lastIndexOf(color) : arr.indexOf(color);
+      const idx = fromEnd ? arr.lastIndexOf(color) : arr.indexOf(color);
+      return idx !== -1 ? idx : 0;
     };
-
-    // const uniqueColors = [...new Set(wires.map((w) => w.color))];
 
     // --------------------------
     // 3-WIRE CASE
@@ -63,15 +76,10 @@ export default function WireRealistic() {
         const multiple2 = answer % 2 === 0;
         const multiple3 = answer % 3 === 0;
 
-        if (multiple2 && multiple3) {
-          return [wires[0].id];
-        } else if (multiple2) {
-          return [wires[0].id];
-        } else if (multiple3) {
-          return [wires[1].id];
-        } else {
-          return [wires[1].id];
-        }
+        if (multiple2 && multiple3) return [wires[0].id];
+        if (multiple2) return [wires[0].id];
+        if (multiple3) return [wires[1].id];
+        return [wires[1].id];
       }
 
       // Rule 2: More Than One Green Wire
@@ -86,11 +94,7 @@ export default function WireRealistic() {
       }
 
       // Rule 3: Default
-      if (answer % 2 === 0) {
-        return [wires[0].id];
-      } else {
-        return [wires[1].id];
-      }
+      return answer % 2 === 0 ? [wires[0].id] : [wires[1].id];
     }
 
     // --------------------------
@@ -107,13 +111,13 @@ export default function WireRealistic() {
       // Rule 1: 1 Black or 1 Red Wire
       if (countColor("black") === 1 || countColor("red") === 1) {
         if (countColor("black") === 1) {
-          const cube = Math.round(Math.cbrt(answer));
+          const cube = Math.round(Math.cbrt(answer || 1));
           const idx = Math.min(cube - 1, wires.length - 1);
-          return [wires[idx].id];
+          return [wires[idx]?.id || wires[0].id];
         } else {
-          const square = Math.round(Math.sqrt(answer));
+          const square = Math.round(Math.sqrt(answer || 1));
           const idx = Math.min(square - 1, wires.length - 1);
-          return [wires[idx].id];
+          return [wires[idx]?.id || wires[0].id];
         }
       }
 
@@ -200,7 +204,7 @@ export default function WireRealistic() {
         if (secondaryColors.includes(wires[2].color)) return [wires[2].id];
         if (wires[4].color === "red") return [wires[2].id];
 
-        const idx = Math.min(answer - 1, wires.length - 1);
+        const idx = Math.min((answer || 1) - 1, wires.length - 1);
         return [wires[idx].id];
       }
     }
@@ -208,7 +212,7 @@ export default function WireRealistic() {
     return [wires[0].id];
   }
 
-  // 🧠 Reset if new session
+  // 🧠 Reset session
   useEffect(() => {
     const sessionMarker = sessionStorage.getItem("sessionActive");
     if (!sessionMarker) {
@@ -250,7 +254,12 @@ export default function WireRealistic() {
         color,
       }));
 
-      const correct = determineCorrectWire(wires);
+      // 🧮 Generate or fetch answer
+      const answer =
+        parseInt(localStorage.getItem("mathAnswer")) ||
+        Math.floor(Math.random() * 9) + 1;
+
+      const correct = determineCorrectWire(wires, answer);
       setWireSetup(wires);
       setCorrectWire(correct);
 
@@ -259,7 +268,7 @@ export default function WireRealistic() {
     }
   }, []);
 
-  // 🧩 Wire cutting logic
+  // 🪓 Wire cutting logic
   useEffect(() => {
     if (wireSetup.length === 0 || disabled) return;
 
@@ -327,7 +336,7 @@ export default function WireRealistic() {
         playSound("/sounds/explosion.mp3");
         localStorage.setItem("wires_moduleCompleted", "true");
         localStorage.setItem("wires_moduleStatus", "exploded");
-        setTimeout(() => navigate("/exploded"), 1500); // 🔥 Redirect after 1.5s
+        setTimeout(() => navigate("/exploded"), 1500);
       }
       setDisabled(true);
     }
@@ -357,7 +366,7 @@ export default function WireRealistic() {
             playSound("/sounds/explosion.mp3");
             localStorage.setItem("wires_moduleCompleted", "true");
             localStorage.setItem("wires_moduleStatus", "exploded");
-            setTimeout(() => navigate("/exploded"), 1500); // 🔥 Redirect after 1.5s
+            setTimeout(() => navigate("/exploded"), 1500);
           }
         }}
       >
@@ -396,9 +405,7 @@ export default function WireRealistic() {
             key={wire.id}
             id={wire.id}
             className="wire-shadow"
-            d={`M 20 ${wire.y} C 150 ${wire.y - 40}, 300 ${wire.y + 40}, 500 ${
-              wire.y
-            }`}
+            d={`M 20 ${wire.y} C 150 ${wire.y - 40}, 300 ${wire.y + 40}, 500 ${wire.y}`}
             stroke={wire.color}
             strokeWidth="6"
             fill="none"

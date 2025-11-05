@@ -11,6 +11,7 @@ import GamePage from "./pages/GamePage";
 import RulesPage from "./pages/RulesPages";
 import BombExploded from "./pages/BombExploded";
 import BombDiffused from "./pages/BombDiffused";
+import ExpertQuestionPage from "./pages/ExpertQuestionPage";
 
 // --- Components ---
 import BackgroundMusic from "./components/BackgroundMusic";
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="/expert" element={<ExpertPage />} />
         <Route path="/exploded" element={<BombExploded />} />
         <Route path="/defused" element={<BombDiffused />} />
+        <Route path="/expert-question" element={<ExpertQuestionPage />} />
       </Routes>
     </Router>
   );

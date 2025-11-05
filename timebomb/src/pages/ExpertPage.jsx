@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState , useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import socket from "../socket";
+
 import {
   Book,
   Zap,
@@ -10,7 +13,7 @@ import {
   Cpu,
 } from "lucide-react";
 
-export default function ExpertManualPage() {
+export default function ExpertPage() {
   const [activeModule, setActiveModule] = useState("wires");
   const [glitch, setGlitch] = useState(false);
 
@@ -22,6 +25,17 @@ export default function ExpertManualPage() {
     }, 4000);
     return () => clearInterval(interval);
   });
+
+  const navigate = useNavigate();
+
+useEffect(() => {
+  socket.on("promptQuestion", (data) => {
+    localStorage.setItem("currentQuestion", JSON.stringify(data));
+    // navigate("/expert-question");
+  });
+
+  return () => socket.off("promptQuestion");
+}, []);
 
   const modules = [
     {
